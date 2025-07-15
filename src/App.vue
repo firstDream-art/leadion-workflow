@@ -1,24 +1,46 @@
 <template>
   <div id="app">
-    <h1>LeadIO</h1>
-    <nav class="simple-nav">
-      <router-link to="/">首頁</router-link>
-      <router-link to="/sign-in">登入</router-link>
-      <router-link to="/dashboard">儀表板</router-link>
-    </nav>
+    <!-- 全域載入狀態 -->
+    <div v-if="!isLoaded" class="loading-container">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>正在載入應用程式...</p>
+      </div>
+    </div>
     
-    <!-- 路由視圖 -->
-    <div class="content">
+    <!-- 主要內容 -->
+    <div v-else>
+      <!-- 導航欄（僅在已登入時顯示） -->
+      <AppNavbar v-if="isSignedIn" />
+      
+      <!-- 路由視圖 -->
       <router-view />
+      
+      <!-- 全域通知 -->
+      <AppNotifications />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-console.log('App.vue with router loaded successfully!')
+import { onMounted } from 'vue'
+import { useAuth } from '@clerk/vue'
+import AppNavbar from '@/components/AppNavbar.vue'
+import AppNotifications from '@/components/AppNotifications.vue'
+
+// Clerk 認證狀態
+const { isSignedIn, isLoaded } = useAuth()
+
+// 應用程式載入時的初始化
+onMounted(() => {
+  console.log('LeadIO App 已載入')
+  console.log('Clerk 載入狀態:', isLoaded.value)
+  console.log('用戶登入狀態:', isSignedIn.value)
+})
 </script>
 
 <style>
+/* 全域樣式 */
 * {
   margin: 0;
   padding: 0;
@@ -26,39 +48,68 @@ console.log('App.vue with router loaded successfully!')
 }
 
 #app {
-  font-family: Arial, sans-serif;
-  background-color: #f0f0f0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #2c3e50;
+  background-color: #f5f5f5;
   min-height: 100vh;
 }
 
-h1 {
-  background: #2c3e50;
-  color: white;
-  padding: 1rem 2rem;
-  margin: 0;
-}
-
-.simple-nav {
-  background: #34495e;
-  padding: 1rem 2rem;
+.loading-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+  background: #f5f5f5;
   display: flex;
-  gap: 1rem;
+  align-items: center;
+  justify-content: center;
 }
 
-.simple-nav a {
-  color: #ecf0f1;
-  text-decoration: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  transition: background-color 0.2s;
+.loading-spinner {
+  text-align: center;
 }
 
-.simple-nav a:hover,
-.simple-nav a.router-link-active {
-  background-color: #3498db;
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #e1e1e1;
+  border-top: 4px solid #409eff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
 }
 
-.content {
-  padding: 2rem;
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-spinner p {
+  color: #666;
+  font-size: 16px;
+}
+
+/* 響應式設計 */
+@media (max-width: 768px) {
+  #app {
+    font-size: 14px;
+  }
+}
+
+/* 深色模式支援 */
+@media (prefers-color-scheme: dark) {
+  #app {
+    color-scheme: dark;
+    background-color: #1a1a1a;
+    color: #ffffff;
+  }
+  
+  .loading-container {
+    background: #1a1a1a;
+  }
 }
 </style> 

@@ -7,25 +7,18 @@
         <p class="auth-subtitle">建立您的帳戶，開始 SEO 分析之旅</p>
       </div>
 
-      <!-- 簡化註冊表單 -->
+      <!-- Clerk 註冊組件 -->
       <div class="auth-form">
-        <div class="form-group">
-          <label>姓名</label>
-          <input type="text" placeholder="請輸入您的姓名" />
-        </div>
-        <div class="form-group">
-          <label>電子郵件</label>
-          <input type="email" placeholder="請輸入您的電子郵件" />
-        </div>
-        <div class="form-group">
-          <label>密碼</label>
-          <input type="password" placeholder="請輸入密碼" />
-        </div>
-        <div class="form-group">
-          <label>確認密碼</label>
-          <input type="password" placeholder="請再次輸入密碼" />
-        </div>
-        <button class="signup-btn" @click="handleSignUp">註冊</button>
+        <SignUp 
+          :appearance="{
+            elements: {
+              rootBox: 'clerk-root',
+              card: 'clerk-card',
+              headerTitle: 'clerk-header',
+              formButtonPrimary: 'clerk-button'
+            }
+          }"
+        />
       </div>
 
       <!-- 登入連結 -->
@@ -42,9 +35,7 @@
 </template>
 
 <script setup lang="ts">
-const handleSignUp = () => {
-  alert('註冊功能開發中，稍後會整合 Clerk 認證系統')
-}
+import { SignUp } from '@clerk/vue'
 </script>
 
 <style scoped>
@@ -63,7 +54,7 @@ const handleSignUp = () => {
   padding: 3rem;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
   width: 100%;
-  max-width: 400px;
+  max-width: 480px;
 }
 
 .auth-header {
@@ -86,48 +77,6 @@ const handleSignUp = () => {
   margin-bottom: 2rem;
 }
 
-.form-group {
-  margin-bottom: 1.5rem;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
-  color: #2c3e50;
-  font-weight: 500;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 0.75rem;
-  border: 2px solid #ecf0f1;
-  border-radius: 6px;
-  font-size: 1rem;
-  transition: border-color 0.2s;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #3498db;
-}
-
-.signup-btn {
-  width: 100%;
-  background: #3498db;
-  color: white;
-  border: none;
-  padding: 0.75rem;
-  border-radius: 6px;
-  font-size: 1rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s;
-}
-
-.signup-btn:hover {
-  background: #2980b9;
-}
-
 .auth-footer {
   text-align: center;
 }
@@ -145,5 +94,61 @@ const handleSignUp = () => {
 
 .auth-link:hover {
   text-decoration: underline;
+}
+
+/* Clerk 組件自訂樣式 */
+:deep(.clerk-root) {
+  width: 100%;
+}
+
+:deep(.clerk-card) {
+  background: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  padding: 0 !important;
+}
+
+:deep(.clerk-header) {
+  display: none; /* 隱藏 Clerk 預設標題，使用我們自己的 */
+}
+
+:deep(.clerk-button) {
+  background: #3498db !important;
+  border-radius: 8px !important;
+  height: 44px !important;
+  font-weight: 500 !important;
+  transition: all 0.2s !important;
+}
+
+:deep(.clerk-button:hover) {
+  background: #2980b9 !important;
+  transform: translateY(-1px);
+}
+
+/* 輸入框樣式 */
+:deep(.cl-formFieldInput) {
+  border-radius: 8px !important;
+  border: 2px solid #ecf0f1 !important;
+  height: 44px !important;
+}
+
+:deep(.cl-formFieldInput:focus) {
+  border-color: #3498db !important;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1) !important;
+}
+
+/* 響應式設計 */
+@media (max-width: 640px) {
+  .auth-container {
+    padding: 1rem;
+  }
+  
+  .auth-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .auth-title {
+    font-size: 1.5rem;
+  }
 }
 </style> 
