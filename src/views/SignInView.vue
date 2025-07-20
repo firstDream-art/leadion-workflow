@@ -237,6 +237,15 @@ import { SignIn } from '@clerk/vue'
 
 .auth-form {
   margin-bottom: 2rem;
+  /* 表單區域使用亮色主題 */
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 16px;
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
 }
 
 .auth-footer {
@@ -348,30 +357,33 @@ import { SignIn } from '@clerk/vue'
 }
 
 :deep(.cl-socialButtonsBlockButton__facebook) {
-  background: var(--accent-bg) !important;
-  border: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
   border-radius: 8px !important;
   height: 48px !important;
   transition: all 0.3s ease !important;
   margin-bottom: 8px !important;
-  color: var(--text-secondary) !important;
+  color: #374151 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 :deep(.cl-socialButtonsBlockButton__google) {
-  background: var(--accent-bg) !important;
-  border: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
   border-radius: 8px !important;
   height: 48px !important;
   transition: all 0.3s ease !important;
   margin-bottom: 8px !important;
-  color: var(--text-secondary) !important;
+  color: #374151 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 :deep(.cl-socialButtonsBlockButton__facebook:hover),
 :deep(.cl-socialButtonsBlockButton__google:hover) {
-  border-color: var(--primary-color) !important;
-  background: rgba(0, 212, 255, 0.1) !important;
+  border-color: #228be6 !important;
+  background: #f8f9fa !important;
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
 }
 
 :deep(.cl-formButtonPrimary) {
@@ -393,41 +405,42 @@ import { SignIn } from '@clerk/vue'
 }
 
 :deep(.cl-formFieldInput) {
-  background: var(--accent-bg) !important;
-  border: 1px solid var(--border-color) !important;
+  background: #ffffff !important;
+  border: 1px solid #d1d5db !important;
   border-radius: 8px !important;
   height: 48px !important;
   padding: 0 16px !important;
   font-size: 16px !important;
   transition: all 0.3s ease !important;
   width: 100% !important;
-  color: var(--text-primary) !important;
+  color: #111827 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
 }
 
 :deep(.cl-formFieldInput:focus) {
-  border-color: var(--primary-color) !important;
-  box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.2) !important;
+  border-color: #228be6 !important;
+  box-shadow: 0 0 0 3px rgba(34, 139, 230, 0.1) !important;
   outline: none !important;
-  background: rgba(0, 212, 255, 0.05) !important;
+  background: #ffffff !important;
 }
 
 :deep(.cl-formFieldLabel) {
-  color: var(--text-secondary) !important;
+  color: #374151 !important;
   font-weight: 500 !important;
   font-size: 14px !important;
   margin-bottom: 6px !important;
 }
 
 :deep(.cl-dividerLine) {
-  background: var(--border-color) !important;
+  background: #e5e7eb !important;
   height: 1px !important;
   margin: 20px 0 !important;
 }
 
 :deep(.cl-dividerText) {
-  color: var(--text-muted) !important;
+  color: #6b7280 !important;
   font-size: 14px !important;
-  background: rgba(26, 31, 46, 0.9) !important;
+  background: rgba(255, 255, 255, 0.95) !important;
   padding: 0 16px !important;
 }
 
@@ -436,13 +449,13 @@ import { SignIn } from '@clerk/vue'
 }
 
 :deep(.cl-footerActionLink) {
-  color: var(--primary-color) !important;
+  color: #228be6 !important;
   text-decoration: none !important;
   font-weight: 500 !important;
 }
 
 :deep(.cl-footerActionLink:hover) {
-  color: var(--secondary-color) !important;
+  color: #1e40af !important;
 }
 
 /* 動畫 */
