@@ -111,23 +111,49 @@ const formData = reactive<SeoFormData>({
   brandWebsite: ''
 })
 
+// 💡 優化：緩存 URL 驗證結果，避免重複計算
+const urlValidationCache = new Map<string, boolean>()
+
+// URL 驗證
+const isValidUrl = (url: string): boolean => {
+  // 檢查緩存
+  if (urlValidationCache.has(url)) {
+    return urlValidationCache.get(url)!
+  }
+  
+  try {
+    new URL(url)
+    urlValidationCache.set(url, true)
+    return true
+  } catch {
+    urlValidationCache.set(url, false)
+    return false
+  }
+}
+
+// 🚀 優化：分別緩存各個驗證結果
+const isUrlValid = computed(() => isValidUrl(formData.brandWebsite))
+
 // 表單驗證
 const isFormValid = computed<boolean>(() => {
   return formData.keyword.trim().length > 0 &&
          formData.brandName.trim().length > 0 &&
          formData.brandWebsite.trim().length > 0 &&
-         isValidUrl(formData.brandWebsite)
+         isUrlValid.value
 })
 
-// URL 驗證
-const isValidUrl = (url: string): boolean => {
-  try {
-    new URL(url)
-    return true
-  } catch {
-    return false
+// 清理緩存當 URL 改變時
+watch(() => formData.brandWebsite, () => {
+  // 保持最新的 100 個驗證結果，清理舊的
+  if (urlValidationCache.size > 100) {
+    const entries = Array.from(urlValidationCache.entries())
+    urlValidationCache.clear()
+    // 保留最新的 50 個
+    entries.slice(-50).forEach(([key, value]) => {
+      urlValidationCache.set(key, value)
+    })
   }
-}
+})
 
 const resetForm = (): void => {
   formData.keyword = ''

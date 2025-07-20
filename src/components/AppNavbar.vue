@@ -27,14 +27,14 @@
       <!-- 用戶選單和動作 -->
       <div class="navbar-actions">
         <!-- 主題切換按鈕 -->
-        <button class="theme-toggle-btn" @click="themeStore.toggleTheme" :title="themeStore.isDark ? '切換到亮色模式' : '切換到暗色模式'">
+        <button class="theme-toggle-btn" @click="themeStore.toggleTheme" :title="getThemeTooltip()">
           <div class="theme-icon">
-            <!-- 暗色模式時顯示太陽圖標 -->
-            <svg v-if="themeStore.isDark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- 亮色主題圖標 -->
+            <svg v-if="themeStore.themeName === 'light'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
               <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 6.34L4.93 4.93M19.07 19.07l-1.41-1.41" stroke="currentColor" stroke-width="2"/>
             </svg>
-            <!-- 亮色模式時顯示月亮圖標 -->
+            <!-- 暗色主題圖標 -->
             <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="currentColor"/>
             </svg>
@@ -75,17 +75,17 @@
           <!-- 手機版主題切換 -->
           <button class="mobile-theme-toggle" @click="themeStore.toggleTheme">
             <div class="mobile-theme-icon">
-              <!-- 暗色模式時顯示太陽圖標 -->
-              <svg v-if="themeStore.isDark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- 亮色主題圖標 -->
+              <svg v-if="themeStore.themeName === 'light'" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
                 <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 6.34L4.93 4.93M19.07 19.07l-1.41-1.41" stroke="currentColor" stroke-width="2"/>
               </svg>
-              <!-- 亮色模式時顯示月亮圖標 -->
+              <!-- 暗色主題圖標 -->
               <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="currentColor"/>
               </svg>
             </div>
-            <span>{{ themeStore.isDark ? '切換到亮色模式' : '切換到暗色模式' }}</span>
+            <span>{{ getThemeLabel() }}</span>
           </button>
           
           <button class="mobile-consultation-btn" @click="showConsultation">
@@ -123,6 +123,22 @@ const toggleMobileMenu = () => {
 
 const closeMobileMenu = () => {
   isMobileMenuOpen.value = false
+}
+
+const getThemeTooltip = () => {
+  const themeMap = {
+    light: '切換到暗色模式',
+    dark: '切換到亮色模式'
+  }
+  return themeMap[themeStore.themeName]
+}
+
+const getThemeLabel = () => {
+  const themeMap = {
+    light: '當前：亮色模式',
+    dark: '當前：暗色模式'
+  }
+  return themeMap[themeStore.themeName]
 }
 </script>
 

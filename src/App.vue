@@ -56,26 +56,27 @@ onMounted(() => {
 }
 
 :root {
-  /* LiblibAI 風格配色 - 現代化設計系統 */
-  --primary-bg: #fafbfc; /* 極淺灰背景 */
-  --secondary-bg: #ffffff; /* 純白背景 */
-  --accent-bg: #f8f9fa; /* 輕微灰色背景 */
-  --primary-color: #228be6; /* 主藍色 */
-  --secondary-color: #339af0; /* 次要藍色 */
-  --success-color: #51cf66; /* 成功綠色 */
-  --warning-color: #ffd43b; /* 警告黃色 */
-  --error-color: #ff6b6b; /* 錯誤紅色 */
-  --text-primary: #212529; /* 主要文字 */
-  --text-secondary: #495057; /* 次要文字 */
-  --text-muted: #6c757d; /* 柔和文字 */
-  --border-color: #e9ecef; /* 邊框顏色 */
-  --gradient-primary: linear-gradient(135deg, #228be6 0%, #339af0 100%);
-  --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
-  --shadow-primary: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05);
-  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
+  /* 深色科技感主題 - 完整配色方案 */
+  --primary-bg: #0f1419;        /* 深藍黑色背景 */
+  --secondary-bg: #1a1f2e;      /* 稍淺的深藍色 */
+  --accent-bg: #242b3d;         /* 卡片背景 */
+  --primary-color: #00d4ff;     /* 亮藍色強調 */
+  --secondary-color: #4fc3f7;   /* 次要藍色 */
+  --text-primary: #ffffff;      /* 主要文字 */
+  --text-secondary: #b3c5ef;    /* 次要文字 */
+  --text-muted: #8892b0;        /* 靜音文字 */
+  --border-color: #30363d;      /* 邊框色 */
   
-  /* Mantine 風格間距 */
+  /* 漸變效果 */
+  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #00d4ff 100%);
+  --gradient-secondary: linear-gradient(135deg, #4fc3f7 0%, #00d4ff 100%);
+  
+  /* 陰影效果 */
+  --shadow-primary: 0 8px 25px rgba(0, 212, 255, 0.3);
+  --shadow-secondary: 0 4px 15px rgba(0, 0, 0, 0.2);
+  --shadow-hover: 0 25px 50px rgba(0, 212, 255, 0.2);
+  
+  /* 間距系統 */
   --spacing-xs: 0.5rem;
   --spacing-sm: 0.75rem;
   --spacing-md: 1rem;
@@ -88,6 +89,12 @@ onMounted(() => {
   --radius-md: 0.5rem;
   --radius-lg: 0.75rem;
   --radius-xl: 1rem;
+  
+  /* 狀態色彩 */
+  --success-color: #51cf66;
+  --warning-color: #ffd43b;
+  --error-color: #ff6b6b;
+  --info-color: #339af0;
 }
 
 #app {

@@ -1,5 +1,16 @@
 <template>
-  <div class="home">
+  <div class="home" @mousemove="handleMouseMove" @mouseleave="handleMouseLeave" ref="homeContainer">
+    <!-- 滑鼠跟隨光芒粒子效果 -->
+    <div class="light-particles">
+      <div 
+        v-for="(particle, index) in particles" 
+        :key="index"
+        class="light-particle"
+        :class="{ 'gathering': isGathering }"
+        :style="getParticleStyle(particle, index)"
+      ></div>
+    </div>
+    
     <!-- LiblibAI 風格英雄區域 -->
     <div class="hero-section">
       <div class="hero-container">
@@ -130,11 +141,248 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { throttle } from 'lodash-es'
 import WorkflowCard from '@/components/WorkflowCard.vue'
 
 const router = useRouter()
+const homeContainer = ref<HTMLElement>()
+
+// 滑鼠位置跟蹤
+const mouseX = ref(0)
+const mouseY = ref(0)
+const isGathering = ref(false)
+let gatheringTimer: number | null = null
+
+// 光芒粒子定義
+interface Particle {
+  id: number
+  baseX: number
+  baseY: number
+  size: number
+  delay: number
+  speed: number
+  color: string
+  orbitRadius: number
+  isCenter: boolean
+  trailOffset: number
+}
+
+// 創建光芒粒子
+const particles = ref<Particle[]>([])
+
+// 初始化粒子
+const initParticles = () => {
+  const colors = [
+    'rgba(0, 212, 255, 0.9)',
+    'rgba(102, 126, 234, 0.8)',
+    'rgba(168, 85, 247, 0.7)',
+    'rgba(34, 139, 230, 0.8)',
+    'rgba(79, 172, 254, 0.7)'
+  ]
+  
+  particles.value = Array.from({ length: 12 }, (_, i) => {
+    // 按大小排序：最大的在前，漸漸變小
+    const size = 10 - (i * 0.6) // 從10px漸減到3.4px
+    const orbitRadius = i === 0 ? 0 : 20 + (i * 12) // 第一個在中心，其他軌道半徑遞增
+    
+    // 為移動軌跡創建更優美的初始偏移
+    const angle = (i * 137.5) % 360 // 黃金角度分布
+    const distance = Math.sqrt(i) * 15 // 螺旋式分布
+    
+    return {
+      id: i,
+      baseX: i === 0 ? 0 : Math.cos(angle * Math.PI / 180) * distance,
+      baseY: i === 0 ? 0 : Math.sin(angle * Math.PI / 180) * distance,
+      size: Math.max(size, 3), // 最小3px
+      delay: i * 30, // 按順序延遲，最大的先動
+      speed: 1 - (i * 0.07), // 最大的速度最快，遞減更明顯
+      color: colors[Math.floor(i / 2.5) % colors.length], // 按組分配顏色
+      orbitRadius: orbitRadius,
+      isCenter: i === 0, // 標記中心粒子
+      trailOffset: i * 0.5 // 軌跡偏移因子
+    }
+  }).sort((a, b) => b.size - a.size) // 按大小降序排列
+}
+
+// 當前滑鼠位置記錄（用於跟隨效果）
+const currentMouseX = ref(0)
+const currentMouseY = ref(0)
+const targetMouseX = ref(0)
+const targetMouseY = ref(0)
+
+// 動畫幀計數器（用於旋轉效果）
+let animationFrame: number | null = null
+const rotationTime = ref(0)
+
+// 開始旋轉動畫
+const startRotationAnimation = () => {
+  if (animationFrame) return
+  
+  const animate = () => {
+    rotationTime.value += 16 // 約60fps
+    if (isGathering.value) {
+      animationFrame = requestAnimationFrame(animate)
+    } else {
+      animationFrame = null
+    }
+  }
+  animationFrame = requestAnimationFrame(animate)
+}
+
+// 獲取粒子樣式
+const getParticleStyle = (particle: Particle, index: number) => {
+  let targetX, targetY
+  
+  if (isGathering.value) {
+    if (particle.isCenter) {
+      // 中心粒子保持在滑鼠位置
+      targetX = mouseX.value
+      targetY = mouseY.value
+    } else {
+      // 其他粒子圍繞中心軌道旋轉，每個軌道速度略有不同
+      const baseAngle = (index - 1) * (360 / 11) // 基礎角度分布
+      const rotationSpeed = 0.8 + (index % 3) * 0.3 // 不同軌道不同速度
+      const currentAngle = baseAngle + (rotationTime.value * rotationSpeed * 0.001)
+      const angleRad = currentAngle * Math.PI / 180
+      
+      targetX = mouseX.value + Math.cos(angleRad) * particle.orbitRadius
+      targetY = mouseY.value + Math.sin(angleRad) * particle.orbitRadius
+    }
+  } else {
+    // 移動時的優美跟隨效果：流體動力學風格軌跡
+    const speedFactor = particle.speed
+    const lagFactor = (1 - speedFactor) * 0.8 // 延遲因子
+    
+    // 計算移動方向和速度
+    const deltaX = mouseX.value - currentMouseX.value
+    const deltaY = mouseY.value - currentMouseY.value
+    const velocity = Math.sqrt(deltaX * deltaX + deltaY * deltaY)
+    
+    // 流體動力學效果：根據移動速度調整粒子軌跡
+    const fluidOffset = Math.min(velocity * 0.3, 30) * lagFactor
+    const perpendicular = {
+      x: -deltaY / (velocity + 0.1), // 避免除零
+      y: deltaX / (velocity + 0.1)
+    }
+    
+    // 波浪式偏移，讓每個粒子有獨特的軌跡
+    const wavePhase = Date.now() * 0.002 + particle.id * 0.8
+    const waveAmplitude = (12 - particle.size) * 0.8 // 小粒子波動更大
+    const waveOffset = Math.sin(wavePhase) * waveAmplitude * lagFactor
+    
+    // 螺旋式拖尾效果
+    const spiralOffset = particle.trailOffset * lagFactor * Math.cos(wavePhase * 0.5)
+    
+    targetX = mouseX.value + 
+              particle.baseX * lagFactor + 
+              perpendicular.x * fluidOffset + 
+              perpendicular.x * waveOffset +
+              perpendicular.y * spiralOffset
+              
+    targetY = mouseY.value + 
+              particle.baseY * lagFactor + 
+              perpendicular.y * fluidOffset + 
+              perpendicular.y * waveOffset +
+              perpendicular.x * spiralOffset
+  }
+  
+  return {
+    left: `${targetX}px`,
+    top: `${targetY}px`,
+    width: `${particle.size}px`,
+    height: `${particle.size}px`,
+    backgroundColor: particle.color,
+    transitionDuration: isGathering.value 
+      ? `${0.8 + index * 0.05}s` // 聚集時平滑過渡
+      : `${0.08 + (1 - particle.speed) * 0.12}s`, // 跟隨時流暢緩動
+    transitionTimingFunction: isGathering.value ? 'cubic-bezier(0.4, 0, 0.2, 1)' : 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+    transform: 'translate(-50%, -50%)',
+    zIndex: Math.floor(particle.size) // 大粒子在上層
+  }
+}
+
+// 💡 優化：緩存容器尺寸，減少 DOM 查詢
+const cachedRect = ref<DOMRect | null>(null)
+
+// 更新容器尺寸緩存
+const updateContainerRect = () => {
+  if (homeContainer.value) {
+    cachedRect.value = homeContainer.value.getBoundingClientRect()
+  }
+}
+
+// 🚀 優化：使用 throttle 限制滑鼠事件頻率
+const handleMouseMove = throttle((event: MouseEvent) => {
+  if (!cachedRect.value) return
+  
+  // 更新滑鼠位置記錄（用於軌跡計算）
+  currentMouseX.value = mouseX.value
+  currentMouseY.value = mouseY.value
+  mouseX.value = event.clientX - cachedRect.value.left
+  mouseY.value = event.clientY - cachedRect.value.top
+  
+  // 重置聚集狀態
+  if (isGathering.value) {
+    isGathering.value = false
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame)
+      animationFrame = null
+    }
+  }
+  
+  if (gatheringTimer) {
+    clearTimeout(gatheringTimer)
+  }
+  
+  // 滑鼠停止移動後開始聚集
+  gatheringTimer = setTimeout(() => {
+    isGathering.value = true
+    startRotationAnimation() // 開始旋轉動畫
+  }, 300) // 300ms 後開始聚集
+}, 16) // 限制為 60fps
+
+// 處理滑鼠離開
+const handleMouseLeave = () => {
+  isGathering.value = false
+  if (gatheringTimer) {
+    clearTimeout(gatheringTimer)
+  }
+  if (animationFrame) {
+    cancelAnimationFrame(animationFrame)
+    animationFrame = null
+  }
+}
+
+// 💡 組件生命週期管理
+onMounted(() => {
+  initParticles()
+  updateContainerRect()
+  
+  // 監聽視窗大小變化，更新容器尺寸
+  window.addEventListener('resize', updateContainerRect)
+})
+
+// 🧹 重要：清理所有副作用，避免內存泄漏
+onUnmounted(() => {
+  // 清理計時器
+  if (gatheringTimer) {
+    clearTimeout(gatheringTimer)
+    gatheringTimer = null
+  }
+  
+  // 清理動畫幀
+  if (animationFrame) {
+    cancelAnimationFrame(animationFrame)
+    animationFrame = null
+  }
+  
+  // 移除事件監聽器
+  window.removeEventListener('resize', updateContainerRect)
+  
+  console.log('🧹 HomeView 資源清理完成')
+})
 
 // 工作流程數據
 const workflows = ref([
@@ -271,48 +519,92 @@ const viewCategory = (category: any) => {
 .home {
   min-height: 100vh;
   background: var(--primary-bg);
-}
-
-/* 英雄區域 */
-.hero-section {
-  background: 
-    radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
-    radial-gradient(ellipse at top right, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
-    radial-gradient(ellipse at bottom left, rgba(34, 139, 230, 0.1) 0%, transparent 50%),
-    linear-gradient(135deg, var(--primary-bg) 0%, rgba(15, 20, 25, 0.95) 100%);
-  padding: 4rem 0 6rem 0;
   position: relative;
   overflow: hidden;
 }
 
-/* 添加動態背景元素 */
-.hero-section::before {
-  content: '';
+/* 光芒粒子容器 */
+.light-particles {
   position: absolute;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.08) 0%, transparent 25%),
-    radial-gradient(circle at 80% 80%, rgba(102, 126, 234, 0.05) 0%, transparent 25%),
-    radial-gradient(circle at 40% 60%, rgba(34, 139, 230, 0.03) 0%, transparent 25%);
-  animation: backgroundFloat 15s ease-in-out infinite alternate;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
   z-index: 1;
 }
 
-.hero-section::after {
-  content: '';
+/* 單個光芒粒子 */
+.light-particle {
   position: absolute;
-  top: -50%;
-  left: -50%;
-  width: 200%;
-  height: 200%;
-  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23667eea' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
-  opacity: 0.4;
-  animation: patternMove 30s linear infinite;
-  z-index: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  transition: all 0.1s ease-out;
+  box-shadow: 
+    0 0 6px currentColor,
+    0 0 12px currentColor,
+    0 0 18px currentColor;
+  animation: sparkle 2s ease-in-out infinite alternate;
 }
+
+/* 聚集狀態的粒子 */
+.light-particle.gathering {
+  animation: sparkle 2s ease-in-out infinite alternate;
+  box-shadow: 
+    0 0 8px currentColor,
+    0 0 16px currentColor,
+    0 0 24px currentColor;
+}
+
+/* 粒子閃爍效果 */
+@keyframes sparkle {
+  0% {
+    opacity: 0.7;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+  100% {
+    opacity: 0.8;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* 不同大小粒子的發光強度 */
+.light-particle {
+  filter: brightness(1.2);
+}
+
+.light-particle:nth-child(1) {
+  /* 最大粒子 - 最亮 */
+  box-shadow: 
+    0 0 10px currentColor,
+    0 0 20px currentColor,
+    0 0 30px currentColor;
+  filter: brightness(1.5);
+}
+
+.light-particle:nth-child(2),
+.light-particle:nth-child(3) {
+  /* 第二、三大粒子 */
+  box-shadow: 
+    0 0 8px currentColor,
+    0 0 16px currentColor,
+    0 0 24px currentColor;
+  filter: brightness(1.3);
+}
+
+/* 英雄區域 */
+.hero-section {
+  background: transparent;
+  padding: 4rem 0 6rem 0;
+  position: relative;
+  z-index: 2;
+}
+
+/* 移除靜態背景元素，讓滑鼠光圈效果更明顯 */
 
 .hero-container {
   max-width: 1200px;
@@ -323,7 +615,7 @@ const viewCategory = (category: any) => {
   gap: 4rem;
   align-items: center;
   position: relative;
-  z-index: 2;
+  z-index: 3;
 }
 
 .hero-content {

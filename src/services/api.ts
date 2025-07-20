@@ -47,6 +47,9 @@ export interface AnalysisResult {
 class ApiService {
   private api: AxiosInstance
   private notificationStore: any
+  // 💡 優化：請求去重和緩存機制
+  private pendingRequests = new Map<string, Promise<any>>()
+  private cache = new Map<string, { data: any, timestamp: number }>()
 
   constructor() {
     this.api = axios.create({

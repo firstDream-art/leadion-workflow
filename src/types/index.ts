@@ -44,9 +44,13 @@ export interface ApiResponse<T = any> {
   error?: string
 }
 
+// 主題類型
+export type ThemeType = 'light' | 'dark'
+
 // 主題設定
 export interface ThemeConfig {
   isDark: boolean
+  theme?: ThemeType
 }
 
 // n8n Webhook 回調數據

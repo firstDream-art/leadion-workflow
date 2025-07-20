@@ -12,8 +12,9 @@
       </div>
       
       <div class="history-list">
+        <!-- 💡 優化：限制渲染數量，提升性能 -->
         <div 
-          v-for="record in executionHistory" 
+          v-for="record in limitedExecutionHistory" 
           :key="record.id"
           class="history-item"
           :class="{ 'completed': record.status === 'completed', 'failed': record.status === 'failed', 'running': record.status === 'running' }"
@@ -270,8 +271,16 @@ const workflows = shallowRef(markRaw([
   }
 ]))
 
+// 💡 優化：限制執行歷史渲染數量，提升性能
+const HISTORY_DISPLAY_LIMIT = 50
+
 // 從 store 獲取執行歷史
 const executionHistory = computed(() => workflowStore.executionHistory)
+
+// 限制顯示的執行歷史數量
+const limitedExecutionHistory = computed(() => 
+  executionHistory.value.slice(0, HISTORY_DISPLAY_LIMIT)
+)
 
 // 計算過濾後的工作流程 - 優化過濾邏輯
 const filteredWorkflows = computed(() => {
@@ -468,19 +477,54 @@ const handleSeoAnalysisComplete = (result: any): void => {
   height: 18px;
 }
 
+.history-item.completed .history-icon,
 .history-item.success .history-icon {
-  background: rgba(81, 207, 102, 0.1);
-  color: var(--success-color);
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
 }
 
 .history-item.failed .history-icon {
-  background: rgba(255, 107, 107, 0.1);
-  color: var(--error-color);
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
 }
 
 .history-item.running .history-icon {
-  background: rgba(255, 212, 59, 0.1);
-  color: var(--warning-color);
+  background: rgba(249, 115, 22, 0.1);
+  color: #ea580c;
+}
+
+.history-item.pending .history-icon {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
+}
+
+.history-status {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.125rem 0.375rem;
+  border-radius: var(--radius-xs);
+  display: inline-block;
+}
+
+.history-status.completed,
+.history-status.success {
+  background: rgba(34, 197, 94, 0.1);
+  color: #16a34a;
+}
+
+.history-status.failed {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
+
+.history-status.running {
+  background: rgba(249, 115, 22, 0.1);
+  color: #ea580c;
+}
+
+.history-status.pending {
+  background: rgba(107, 114, 128, 0.1);
+  color: #6b7280;
 }
 
 .history-content {
@@ -505,27 +549,10 @@ const handleSeoAnalysisComplete = (result: any): void => {
   margin-bottom: 0.125rem;
 }
 
-.history-status {
+.history-duration {
   font-size: 0.75rem;
+  color: var(--text-muted);
   font-weight: 500;
-  padding: 0.125rem 0.375rem;
-  border-radius: var(--radius-xs);
-  display: inline-block;
-}
-
-.history-status.success {
-  background: rgba(81, 207, 102, 0.1);
-  color: var(--success-color);
-}
-
-.history-status.failed {
-  background: rgba(255, 107, 107, 0.1);
-  color: var(--error-color);
-}
-
-.history-status.running {
-  background: rgba(255, 212, 59, 0.1);
-  color: var(--warning-color);
 }
 
 /* 主要內容區域 */
