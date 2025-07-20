@@ -36,15 +36,19 @@
         </div>
         
         <div class="form-group">
-          <label for="brandUrl" class="form-label">品牌網址</label>
+          <label for="brandWebsite" class="form-label">品牌網址</label>
           <input
-            id="brandUrl"
-            v-model="formData.brandUrl"
+            id="brandWebsite"
+            v-model="formData.brandWebsite"
             type="url"
             class="form-input"
             placeholder="https://example.com"
+            :class="{ 'form-input-error': formData.brandWebsite && !isValidUrl(formData.brandWebsite) }"
             required
           />
+          <span v-if="formData.brandWebsite && !isValidUrl(formData.brandWebsite)" class="field-error">
+            請輸入有效的網址格式
+          </span>
         </div>
         
         
@@ -52,9 +56,12 @@
           <button type="button" class="btn-secondary" @click="close">
             取消
           </button>
-          <button type="submit" class="btn-primary" :disabled="isSubmitting">
-            <span v-if="isSubmitting">分析中...</span>
-            <span v-else>開始分析</span>
+          <button type="submit" class="btn-primary" :disabled="isSubmitting || !isFormValid">
+            <div class="btn-content">
+              <div v-if="isSubmitting" class="loading-spinner"></div>
+              <span v-if="isSubmitting">分析中...</span>
+              <span v-else>開始分析</span>
+            </div>
           </button>
         </div>
       </form>
@@ -76,7 +83,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
+import { useWorkflowStore } from '@/stores/workflow'
+import type { SeoFormData, ApiResponse } from '@/types'
 
 interface Props {
   isVisible: boolean
@@ -84,85 +93,129 @@ interface Props {
 
 interface Emits {
   (event: 'close'): void
-  (event: 'analysis-complete', result: any): void
+  (event: 'analysis-complete', result: ApiResponse): void
 }
 
 defineProps<Props>()
 const emit = defineEmits<Emits>()
 
-const isSubmitting = ref(false)
-const analysisResult = ref(null)
-const error = ref('')
+const workflowStore = useWorkflowStore()
 
-const formData = reactive({
+const isSubmitting = ref<boolean>(false)
+const analysisResult = ref<ApiResponse | null>(null)
+const error = ref<string>('')
+
+const formData = reactive<SeoFormData>({
   keyword: '',
   brandName: '',
-  brandUrl: ''
+  brandWebsite: ''
 })
 
-const close = () => {
-  emit('close')
-  // 重置表單
+// 表單驗證
+const isFormValid = computed<boolean>(() => {
+  return formData.keyword.trim().length > 0 &&
+         formData.brandName.trim().length > 0 &&
+         formData.brandWebsite.trim().length > 0 &&
+         isValidUrl(formData.brandWebsite)
+})
+
+// URL 驗證
+const isValidUrl = (url: string): boolean => {
+  try {
+    new URL(url)
+    return true
+  } catch {
+    return false
+  }
+}
+
+const resetForm = (): void => {
   formData.keyword = ''
   formData.brandName = ''
-  formData.brandUrl = ''
+  formData.brandWebsite = ''
   analysisResult.value = null
   error.value = ''
 }
 
-const submitAnalysis = async () => {
-  if (isSubmitting.value) return
+const close = (): void => {
+  emit('close')
+  resetForm()
+}
+
+const submitAnalysis = async (): Promise<void> => {
+  if (isSubmitting.value || !isFormValid.value) return
   
   isSubmitting.value = true
   error.value = ''
   analysisResult.value = null
   
+  // 添加執行記錄到歷史
+  const executionId = workflowStore.addExecution({
+    workflowName: 'SEO 關鍵字分析器',
+    category: 'seo',
+    status: 'running',
+    startTime: new Date(),
+    inputData: { ...formData }
+  })
+  
   try {
     // 使用正確的 field 名稱
     const formDataToSend = new FormData()
-    formDataToSend.append('field-0', formData.keyword)
-    formDataToSend.append('field-1', formData.brandName)
-    formDataToSend.append('field-2', formData.brandUrl)
+    formDataToSend.append('field-0', formData.keyword.trim())
+    formDataToSend.append('field-1', formData.brandName.trim())
+    formDataToSend.append('field-2', formData.brandWebsite.trim())
     
     console.log('發送的資料:', {
       '主關鍵詞': formData.keyword,
       '品牌名稱': formData.brandName,
-      '品牌官網': formData.brandUrl
+      '品牌官網': formData.brandWebsite
     })
-    
-    // 檢查 FormData 內容
-    for (let [key, value] of formDataToSend.entries()) {
-      console.log(`FormData: ${key} = ${value}`)
-    }
     
     const response = await fetch('https://awesomeseo.zeabur.app/form-test/3ed00c5a-c772-46e1-a44c-13a42ce56cc3', {
       method: 'POST',
-      // 不設定 Content-Type，讓瀏覽器自動設定 multipart/form-data
       body: formDataToSend
     })
     
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
+      throw new Error(`HTTP 錯誤！狀態碼: ${response.status}`)
     }
     
-    const result = await response.json()
-    analysisResult.value = result
+    const result: ApiResponse = await response.json()
     
-    // 顯示成功訊息但不開啟等待頁面
-    if (result.formWaitingUrl) {
-      analysisResult.value = {
-        message: '✅ SEO 分析已成功啟動！分析結果將在完成後通知您。',
-        waitingUrl: result.formWaitingUrl,
-        status: 'success'
-      }
+    // 更新執行狀態為完成
+    workflowStore.updateExecution(executionId, {
+      status: 'completed',
+      endTime: new Date(),
+      outputData: result
+    })
+    
+    analysisResult.value = {
+      success: true,
+      message: '✅ SEO 分析已成功啟動！分析結果將在完成後通知您。',
+      data: result
     }
     
     // 發送成功事件給父組件
-    emit('analysis-complete', result)
+    emit('analysis-complete', analysisResult.value)
+    
+    // 自動關閉表單
+    setTimeout(() => {
+      close()
+    }, 2000)
     
   } catch (err) {
     console.error('分析請求失敗:', err)
-    error.value = '分析請求失敗，請稍後再試'
+    
+    const errorMessage = err instanceof Error ? err.message : '未知錯誤'
+    error.value = `分析請求失敗: ${errorMessage}`
+    
+    // 更新執行狀態為失敗
+    workflowStore.updateExecution(executionId, {
+      status: 'failed',
+      endTime: new Date(),
+      errorMessage: error.value
+    })
+    
   } finally {
     isSubmitting.value = false
   }
@@ -349,6 +402,43 @@ const submitAnalysis = async () => {
   color: var(--error-color);
   margin: 0;
   font-size: 0.9rem;
+}
+
+/* 表單驗證樣式 */
+.form-input-error {
+  border-color: var(--error-color) !important;
+  box-shadow: 0 0 0 3px rgba(255, 107, 107, 0.1) !important;
+}
+
+.field-error {
+  color: var(--error-color);
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+  display: block;
+}
+
+/* 按鈕內容樣式 */
+.btn-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Loading spinner */
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid currentColor;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 /* 響應式設計 */

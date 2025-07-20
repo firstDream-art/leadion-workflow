@@ -1,12 +1,20 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import type { ThemeConfig } from '@/types'
 
 export const useThemeStore = defineStore('theme', () => {
   // 當前主題狀態
-  const isDark = ref(true) // 預設為暗色主題
+  const isDark = ref<boolean>(true) // 預設為暗色主題
+  
+  // 主題配置
+  const themeConfig = computed<ThemeConfig>(() => ({
+    isDark: isDark.value
+  }))
   
   // 主題名稱
-  const themeName = computed(() => isDark.value ? 'dark' : 'light')
+  const themeName = computed<'dark' | 'light'>(() => 
+    isDark.value ? 'dark' : 'light'
+  )
   
   // 從 localStorage 讀取已保存的主題設定
   const initTheme = () => {
@@ -101,6 +109,7 @@ export const useThemeStore = defineStore('theme', () => {
   
   return {
     isDark,
+    themeConfig,
     themeName,
     initTheme,
     toggleTheme,

@@ -16,11 +16,11 @@
           v-for="record in executionHistory" 
           :key="record.id"
           class="history-item"
-          :class="{ 'success': record.status === 'success', 'failed': record.status === 'failed', 'running': record.status === 'running' }"
+          :class="{ 'completed': record.status === 'completed', 'failed': record.status === 'failed', 'running': record.status === 'running' }"
           @click="viewHistoryDetail(record)"
         >
           <div class="history-icon">
-            <svg v-if="record.status === 'success'" viewBox="0 0 24 24" fill="currentColor">
+            <svg v-if="record.status === 'completed'" viewBox="0 0 24 24" fill="currentColor">
               <path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
             </svg>
             <svg v-else-if="record.status === 'failed'" viewBox="0 0 24 24" fill="currentColor">
@@ -33,9 +33,12 @@
           
           <div class="history-content">
             <div class="history-title">{{ record.workflowName }}</div>
-            <div class="history-time">{{ formatTime(record.executedAt) }}</div>
+            <div class="history-time">{{ formatTime(record.startTime) }}</div>
             <div class="history-status" :class="record.status">
               {{ getStatusText(record.status) }}
+            </div>
+            <div v-if="record.endTime" class="history-duration">
+              {{ workflowStore.getExecutionDuration(record) }}
             </div>
           </div>
         </div>
@@ -57,7 +60,7 @@
           :key="category.id"
           class="category-tab"
           :class="{ 'active': selectedCategory === category.id }"
-          @click="selectCategory(category.id)"
+          @click="selectCategory(category.id as WorkflowCategory)"
         >
           <span class="tab-icon" v-html="category.icon"></span>
           <span class="tab-text">{{ category.name }}</span>
@@ -109,17 +112,21 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import WorkflowCard from '@/components/WorkflowCard.vue'
-import SeoAnalyzerForm from '@/components/SeoAnalyzerForm.vue'
+import { ref, computed, onMounted, shallowRef, markRaw } from 'vue'
+import { defineAsyncComponent } from 'vue'
 import { useWorkflowStore } from '@/stores/workflow'
 import { simulateWebhookReceiver } from '@/api/webhook'
+import type { WorkflowCategory } from '@/types'
+
+// 懶加載組件
+const WorkflowCard = defineAsyncComponent(() => import('@/components/WorkflowCard.vue'))
+const SeoAnalyzerForm = defineAsyncComponent(() => import('@/components/SeoAnalyzerForm.vue'))
 
 // 選中的分類
-const selectedCategory = ref('all')
+const selectedCategory = ref<WorkflowCategory>('all')
 
 // SEO 分析器顯示狀態
-const showSeoAnalyzer = ref(false)
+const showSeoAnalyzer = ref<boolean>(false)
 
 // 使用 workflow store
 const workflowStore = useWorkflowStore()
@@ -129,8 +136,8 @@ onMounted(() => {
   simulateWebhookReceiver()
 })
 
-// 分類數據
-const categories = ref([
+// 分類數據 - 使用 shallowRef 提升效能
+const categories = shallowRef([
   {
     id: 'all',
     name: '全部',
@@ -163,8 +170,8 @@ const categories = ref([
   }
 ])
 
-// 工作流程數據
-const workflows = ref([
+// 工作流程數據 - 使用 shallowRef 並凍結對象提升效能
+const workflows = shallowRef(markRaw([
   {
     id: 1,
     title: 'SEO 關鍵字分析器',
@@ -261,79 +268,34 @@ const workflows = ref([
     tags: ['文案', '優化', 'AI'],
     icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14,3V5H17.59L7.76,14.83L9.17,16.24L19,6.41V10H21V3M19,19H5V5H12V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V12H19V19Z"/></svg>'
   }
-])
+]))
 
-// 使用 store 中的執行歷史
+// 從 store 獲取執行歷史
 const executionHistory = computed(() => workflowStore.executionHistory)
 
-// 舊的執行歷史數據（移除）
-const oldExecutionHistory = ref([
-  {
-    id: 1,
-    workflowName: 'SEO 關鍵字分析器',
-    executedAt: new Date(Date.now() - 2 * 60 * 1000), // 2分鐘前
-    status: 'success',
-    duration: '45秒'
-  },
-  {
-    id: 2,
-    workflowName: '內容智能生成器',
-    executedAt: new Date(Date.now() - 15 * 60 * 1000), // 15分鐘前
-    status: 'success',
-    duration: '1分23秒'
-  },
-  {
-    id: 3,
-    workflowName: '數據可視化分析',
-    executedAt: new Date(Date.now() - 45 * 60 * 1000), // 45分鐘前
-    status: 'failed',
-    duration: '30秒'
-  },
-  {
-    id: 4,
-    workflowName: '競爭對手分析',
-    executedAt: new Date(Date.now() - 120 * 60 * 1000), // 2小時前
-    status: 'success',
-    duration: '2分45秒'
-  },
-  {
-    id: 5,
-    workflowName: 'SEO 關鍵字分析器',
-    executedAt: new Date(Date.now() - 3 * 60 * 60 * 1000), // 3小時前
-    status: 'success',
-    duration: '52秒'
-  },
-  {
-    id: 6,
-    workflowName: '網站性能檢測',
-    executedAt: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6小時前
-    status: 'running',
-    duration: '進行中'
-  }
-])
-
-// 計算過濾後的工作流程
+// 計算過濾後的工作流程 - 優化過濾邏輯
 const filteredWorkflows = computed(() => {
-  if (selectedCategory.value === 'all') {
+  const category = selectedCategory.value
+  if (category === 'all') {
     return workflows.value
   }
-  return workflows.value.filter(workflow => workflow.category === selectedCategory.value)
+  return workflows.value.filter(workflow => workflow.category === category)
 })
 
-// 方法
-const selectCategory = (categoryId: string) => {
+// 優化方法 - 使用型別安全
+const selectCategory = (categoryId: WorkflowCategory): void => {
   selectedCategory.value = categoryId
 }
 
-const viewWorkflow = (workflow: any) => {
+const viewWorkflow = (workflow: any): void => {
   console.log('查看工作流程:', workflow.title)
 }
 
-const previewWorkflow = (workflow: any) => {
+const previewWorkflow = (workflow: any): void => {
   console.log('預覽工作流程:', workflow.title)
 }
 
-const useWorkflow = (workflow: any) => {
+const useWorkflow = (workflow: any): void => {
   console.log('使用工作流程:', workflow.title)
   
   // 如果是 SEO 關鍵字分析器，顯示表單
@@ -342,35 +304,35 @@ const useWorkflow = (workflow: any) => {
     return
   }
   
-  // 其他工作流程的模擬執行
-  const newRecord = {
-    id: Date.now(),
+  // 其他工作流程的模擬執行 - 使用 store
+  const executionId = workflowStore.addExecution({
     workflowName: workflow.title,
-    executedAt: new Date(),
+    category: workflow.category as WorkflowCategory,
     status: 'running',
-    duration: '進行中'
-  }
-  executionHistory.value.unshift(newRecord)
+    startTime: new Date()
+  })
   
   // 模擬執行完成
   setTimeout(() => {
-    const record = executionHistory.value.find(r => r.id === newRecord.id)
-    if (record) {
-      record.status = Math.random() > 0.2 ? 'success' : 'failed'
-      record.duration = Math.random() > 0.5 ? `${Math.floor(Math.random() * 60 + 30)}秒` : `${Math.floor(Math.random() * 3 + 1)}分${Math.floor(Math.random() * 60)}秒`
-    }
+    const success = Math.random() > 0.2
+    workflowStore.updateExecution(executionId, {
+      status: success ? 'completed' : 'failed',
+      endTime: new Date(),
+      errorMessage: success ? undefined : '模擬執行失敗'
+    })
   }, 3000)
 }
 
-const refreshHistory = () => {
+const refreshHistory = (): void => {
   console.log('刷新歷史記錄')
 }
 
-const viewHistoryDetail = (record: any) => {
+const viewHistoryDetail = (record: any): void => {
   console.log('查看歷史詳情:', record)
 }
 
-const formatTime = (date: Date) => {
+// 格式化時間顯示
+const formatTime = (date: Date): string => {
   const now = new Date()
   const diff = now.getTime() - date.getTime()
   const minutes = Math.floor(diff / 60000)
@@ -390,35 +352,21 @@ const formatTime = (date: Date) => {
   })
 }
 
-const getStatusText = (status: string) => {
+// 獲取狀態文字
+const getStatusText = (status: string): string => {
   const statusMap: Record<string, string> = {
-    'success': '成功',
+    'completed': '成功',
     'failed': '失敗',
-    'running': '進行中'
+    'running': '進行中',
+    'pending': '等待中'
   }
   return statusMap[status] || status
 }
 
-// SEO 分析完成處理
-const handleSeoAnalysisComplete = (result: any) => {
+// SEO 分析完成處理 - 在 SeoAnalyzerForm 中已處理
+const handleSeoAnalysisComplete = (result: any): void => {
   console.log('SEO 分析啟動:', result)
-  
-  // 添加到執行歷史（使用 store）
-  const executionId = workflowStore.addExecution({
-    workflowName: 'SEO 關鍵字分析器',
-    executedAt: new Date(),
-    status: result.formWaitingUrl ? 'running' : 'failed',
-    duration: result.formWaitingUrl ? '分析中...' : '啟動失敗'
-  })
-  
-  // 存儲執行 ID 供後續更新使用
-  if (result.formWaitingUrl) {
-    const waitingId = result.formWaitingUrl.split('/').pop()
-    console.log(`等待 n8n 完成通知，執行 ID: ${executionId}, 等待 ID: ${waitingId}`)
-  }
-  
-  // 關閉表單
-  showSeoAnalyzer.value = false
+  // 表單組件已經處理了執行記錄的添加和管理
 }
 </script>
 

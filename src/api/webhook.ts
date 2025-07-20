@@ -1,10 +1,12 @@
 // API 處理 n8n webhook 通知
 import { useWorkflowStore } from '@/stores/workflow'
 
+import type { ExecutionStatus } from '@/types'
+
 export interface N8nWebhookPayload {
   executionId: string
   workflowName: string
-  status: 'success' | 'failed'
+  status: 'completed' | 'failed'
   resultUrl?: string
   duration?: string
   timestamp: string
@@ -24,7 +26,7 @@ export const handleN8nWebhook = (payload: N8nWebhookPayload) => {
   })
   
   // 可以在這裡添加通知用戶的邏輯
-  if (payload.status === 'success') {
+  if (payload.status === 'completed') {
     console.log('✅ SEO 分析完成！結果:', payload.resultUrl)
   } else {
     console.log('❌ SEO 分析失敗')
