@@ -1,126 +1,128 @@
 <template>
   <div class="home">
-    <!-- 英雄區域 -->
+    <!-- LiblibAI 風格英雄區域 -->
     <div class="hero-section">
-      <div class="hero-background">
-        <div class="tech-circle"></div>
-        <div class="floating-elements">
-          <div class="element element-1"></div>
-          <div class="element element-2"></div>
-          <div class="element element-3"></div>
-        </div>
-      </div>
-      
-      <div class="hero-content">
-        <div class="hero-title-wrapper">
+      <div class="hero-container">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="badge-text">🚀 AI 驅動的智能平台</span>
+          </div>
+          
           <h1 class="hero-title">
-            <span class="title-chinese">有感決策</span>
-            <span class="title-english">Accelerate insight</span>
-            <span class="title-brand">With LeadIO AI</span>
+            探索 AI 工作流程
+            <span class="title-highlight">加速您的創意過程</span>
           </h1>
-          <div class="hero-subtitle">
-            <p>為成長型企業提供全面的 AI 自動化</p>
-            <p>和數據驅動的行銷解決方案</p>
-            <p>透過智能科技的產品與服務</p>
-            <p>將帶來效率、洞察力和成長</p>
+          
+          <p class="hero-description">
+            發現、使用和分享 AI 驅動的工作流程，從內容創作到數據分析，
+            讓人工智能為您的創意和業務流程注入新的活力。
+          </p>
+          
+          <div class="hero-actions">
+            <button class="btn-primary hero-btn" @click="getStarted">
+              開始探索
+            </button>
+            <button class="btn-secondary hero-btn" @click="learnMore">
+              了解更多
+            </button>
+          </div>
+          
+          <div class="hero-stats">
+            <div class="stat-item">
+              <span class="stat-number">10,000+</span>
+              <span class="stat-label">工作流程</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">50,000+</span>
+              <span class="stat-label">活躍用戶</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-number">95%</span>
+              <span class="stat-label">滿意度</span>
+            </div>
           </div>
         </div>
         
-        <div class="hero-actions">
-          <button class="btn btn-primary hero-btn" @click="getStarted">
-            立即預約AI顧問諮詢
-            <span class="btn-arrow">→</span>
+        <div class="hero-visual">
+          <div class="visual-grid">
+            <div class="grid-item item-1">
+              <div class="item-icon">🤖</div>
+              <span>AI 分析</span>
+            </div>
+            <div class="grid-item item-2">
+              <div class="item-icon">📊</div>
+              <span>數據洞察</span>
+            </div>
+            <div class="grid-item item-3">
+              <div class="item-icon">⚡</div>
+              <span>自動化</span>
+            </div>
+            <div class="grid-item item-4">
+              <div class="item-icon">🎯</div>
+              <span>精準優化</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 工作流程展示區域 -->
+    <div class="workflows-section">
+      <div class="workflows-container">
+        <div class="section-header">
+          <h2 class="section-title">熱門工作流程</h2>
+          <p class="section-subtitle">探索最受歡迎的 AI 工作流程，提升您的工作效率</p>
+        </div>
+        
+        <div class="workflows-grid">
+          <WorkflowCard
+            v-for="workflow in workflows"
+            :key="workflow.id"
+            :title="workflow.title"
+            :category="workflow.category"
+            :description="workflow.description"
+            :usage="workflow.usage"
+            :rating="workflow.rating"
+            :users="workflow.users"
+            :tags="workflow.tags"
+            @click="viewWorkflow(workflow)"
+            @preview="previewWorkflow(workflow)"
+            @use="useWorkflow(workflow)"
+          >
+            <template #icon>
+              <div v-html="workflow.icon"></div>
+            </template>
+          </WorkflowCard>
+        </div>
+        
+        <div class="section-actions">
+          <button class="btn-outline" @click="viewAllWorkflows">
+            查看所有工作流程
           </button>
         </div>
       </div>
     </div>
 
-    <!-- 功能特色區域 -->
-    <div class="features-section">
-      <div class="features-container">
+    <!-- 分類區域 -->
+    <div class="categories-section">
+      <div class="categories-container">
         <div class="section-header">
-          <h2 class="section-title">核心功能</h2>
-          <p class="section-subtitle">運用 AI 技術驅動的專業 SEO 分析平台</p>
+          <h2 class="section-title">工作流程分類</h2>
+          <p class="section-subtitle">按類別瀏覽，快速找到您需要的工作流程</p>
         </div>
         
-        <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon-bg"></div>
-              <span class="feature-icon-text">SEO</span>
-            </div>
-            <h3 class="feature-title">智能 SEO 分析</h3>
-            <p class="feature-description">
-              深度分析網站的 SEO 表現，運用 AI 算法提供精準的優化建議和策略指導
-            </p>
-            <div class="feature-metrics">
-              <span class="metric">準確率 95%+</span>
-            </div>
+        <div class="categories-grid">
+          <div 
+            v-for="category in categories"
+            :key="category.id"
+            class="category-card"
+            @click="viewCategory(category)"
+          >
+            <div class="category-icon" v-html="category.icon"></div>
+            <h3 class="category-title">{{ category.name }}</h3>
+            <p class="category-description">{{ category.description }}</p>
+            <span class="category-count">{{ category.count }} 個工作流程</span>
           </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon-bg"></div>
-              <span class="feature-icon-text">DATA</span>
-            </div>
-            <h3 class="feature-title">數據洞察報告</h3>
-            <p class="feature-description">
-              生成專業的可視化分析報告，幫助您制定數據驅動的優化策略
-            </p>
-            <div class="feature-metrics">
-              <span class="metric">即時生成</span>
-            </div>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon-bg"></div>
-              <span class="feature-icon-text">AI</span>
-            </div>
-            <h3 class="feature-title">AI 智能建議</h3>
-            <p class="feature-description">
-              運用先進的機器學習技術，提供個性化的智能優化建議
-            </p>
-            <div class="feature-metrics">
-              <span class="metric">24/7 監控</span>
-            </div>
-          </div>
-          
-          <div class="feature-card">
-            <div class="feature-icon-wrapper">
-              <div class="feature-icon-bg"></div>
-              <span class="feature-icon-text">FAST</span>
-            </div>
-            <h3 class="feature-title">快速響應</h3>
-            <p class="feature-description">
-              一鍵啟動分析流程，快速獲得結果，大幅節省您的寶貴時間
-            </p>
-            <div class="feature-metrics">
-              <span class="metric">< 30秒</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 統計數據區域 -->
-    <div class="stats-section">
-      <div class="stats-container">
-        <div class="stat-item">
-          <div class="stat-number">10,000+</div>
-          <div class="stat-label">網站分析</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">95%</div>
-          <div class="stat-label">準確率</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">24/7</div>
-          <div class="stat-label">AI 監控</div>
-        </div>
-        <div class="stat-item">
-          <div class="stat-number">< 30s</div>
-          <div class="stat-label">響應時間</div>
         </div>
       </div>
     </div>
@@ -128,9 +130,113 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import WorkflowCard from '@/components/WorkflowCard.vue'
 
 const router = useRouter()
+
+// 工作流程數據
+const workflows = ref([
+  {
+    id: 1,
+    title: 'SEO 關鍵字分析器',
+    category: 'SEO優化',
+    description: '智能分析網站關鍵字排名，提供詳細的SEO優化建議和競爭對手分析報告。',
+    usage: 2534,
+    rating: 4.8,
+    users: '1.2k',
+    tags: ['SEO', 'AI', '分析'],
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>'
+  },
+  {
+    id: 2,
+    title: '內容智能生成器',
+    category: '內容創作',
+    description: '基於AI的內容生成工具，自動創建高質量的文章、社交媒體貼文和營銷文案。',
+    usage: 1890,
+    rating: 4.6,
+    users: '890',
+    tags: ['AI', '自動化', '內容'],
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z"/></svg>'
+  },
+  {
+    id: 3,
+    title: '數據可視化分析',
+    category: '數據分析',
+    description: '將複雜數據轉換為直觀圖表，自動生成商業洞察報告和趨勢分析。',
+    usage: 3421,
+    rating: 4.9,
+    users: '2.1k',
+    tags: ['數據', '分析', '報告'],
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22,21H2V3H4V19H6V17H10V19H12V16H16V19H18V17H22V21Z"/></svg>'
+  },
+  {
+    id: 4,
+    title: '社交媒體排程器',
+    category: '社交營銷',
+    description: '智能社交媒體內容排程，最佳時間發布建議，多平台同步管理。',
+    usage: 1256,
+    rating: 4.7,
+    users: '634',
+    tags: ['社交', '自動化', '營銷'],
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2M12,20C7.59,20 4,16.41 4,12C4,7.59 7.59,4 12,4C16.41,4 20,7.59 20,12C20,16.41 16.41,20 12,20Z"/></svg>'
+  },
+  {
+    id: 5,
+    title: '客戶行為追蹤',
+    category: '用戶分析',
+    description: '深度分析用戶行為模式，提供個性化推薦和轉換優化策略。',
+    usage: 987,
+    rating: 4.5,
+    users: '445',
+    tags: ['追蹤', '分析', '優化'],
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>'
+  },
+  {
+    id: 6,
+    title: '電子郵件營銷自動化',
+    category: '郵件營銷',
+    description: '智能電子郵件序列設計，個性化內容推送，提升開信率和轉換率。',
+    usage: 1567,
+    rating: 4.4,
+    users: '723',
+    tags: ['郵件', '自動化', '營銷'],
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/></svg>'
+  }
+])
+
+// 分類數據
+const categories = ref([
+  {
+    id: 1,
+    name: 'SEO優化',
+    description: '提升網站搜索排名和流量',
+    count: 156,
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3z"/></svg>'
+  },
+  {
+    id: 2,
+    name: '內容創作',
+    description: 'AI驅動的內容生成和編輯',
+    count: 234,
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2Z"/></svg>'
+  },
+  {
+    id: 3,
+    name: '數據分析',
+    description: '智能數據處理和洞察生成',
+    count: 189,
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M22,21H2V3H4V19H6V17H10V19H12V16H16V19H18V17H22V21Z"/></svg>'
+  },
+  {
+    id: 4,
+    name: '營銷自動化',
+    description: '自動化營銷流程和客戶管理',
+    count: 127,
+    icon: '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/></svg>'
+  }
+])
 
 const getStarted = () => {
   router.push('/sign-in')
@@ -139,197 +245,210 @@ const getStarted = () => {
 const learnMore = () => {
   alert('了解更多功能開發中！')
 }
+
+const viewWorkflow = (workflow: any) => {
+  console.log('查看工作流程:', workflow.title)
+}
+
+const previewWorkflow = (workflow: any) => {
+  console.log('預覽工作流程:', workflow.title)
+}
+
+const useWorkflow = (workflow: any) => {
+  console.log('使用工作流程:', workflow.title)
+}
+
+const viewAllWorkflows = () => {
+  router.push('/analysis')
+}
+
+const viewCategory = (category: any) => {
+  console.log('查看分類:', category.name)
+}
 </script>
 
 <style scoped>
 .home {
   min-height: 100vh;
   background: var(--primary-bg);
-  overflow-x: hidden;
 }
 
 /* 英雄區域 */
 .hero-section {
+  background: var(--primary-bg);
+  padding: 4rem 0 6rem 0;
   position: relative;
-  min-height: 100vh;
-  display: flex;
+}
+
+.hero-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4rem;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  background: radial-gradient(ellipse at center, rgba(0, 212, 255, 0.1) 0%, transparent 70%);
-}
-
-.hero-background {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  overflow: hidden;
-  z-index: 1;
-}
-
-.tech-circle {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 600px;
-  height: 600px;
-  border: 2px solid var(--primary-color);
-  border-radius: 50%;
-  opacity: 0.3;
-  animation: rotate 20s linear infinite, pulse 4s ease-in-out infinite;
-}
-
-.tech-circle::before,
-.tech-circle::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  border: 1px solid var(--secondary-color);
-  border-radius: 50%;
-  opacity: 0.5;
-}
-
-.tech-circle::before {
-  width: 120%;
-  height: 120%;
-  animation: rotate 30s linear infinite reverse;
-}
-
-.tech-circle::after {
-  width: 80%;
-  height: 80%;
-  animation: rotate 15s linear infinite;
-}
-
-.floating-elements {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-}
-
-.element {
-  position: absolute;
-  width: 4px;
-  height: 4px;
-  background: var(--primary-color);
-  border-radius: 50%;
-  opacity: 0.6;
-  animation: float 6s ease-in-out infinite;
-}
-
-.element-1 {
-  top: 20%;
-  left: 15%;
-  animation-delay: 0s;
-}
-
-.element-2 {
-  top: 60%;
-  right: 20%;
-  animation-delay: 2s;
-}
-
-.element-3 {
-  bottom: 30%;
-  left: 25%;
-  animation-delay: 4s;
 }
 
 .hero-content {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  max-width: 900px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
 }
 
-.hero-title-wrapper {
-  margin-bottom: 3rem;
+.hero-badge {
+  display: inline-flex;
+  align-self: flex-start;
+}
+
+.badge-text {
+  background: rgba(34, 139, 230, 0.1);
+  color: var(--primary-color);
+  padding: 0.5rem 1rem;
+  border-radius: 2rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid rgba(34, 139, 230, 0.2);
 }
 
 .hero-title {
+  font-size: 3rem;
+  font-weight: 700;
   line-height: 1.2;
-  margin-bottom: 2rem;
-}
-
-.title-chinese {
-  display: block;
-  font-size: 3.5rem;
-  font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 0.5rem;
+  margin: 0;
 }
 
-.title-english {
+.title-highlight {
   display: block;
-  font-size: 2.5rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 0.5rem;
-}
-
-.title-brand {
-  display: block;
-  font-size: 2.8rem;
-  font-weight: 700;
   background: var(--gradient-primary);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.hero-subtitle {
+.hero-description {
+  font-size: 1.125rem;
+  line-height: 1.6;
   color: var(--text-secondary);
-  font-size: 1.1rem;
-  line-height: 1.8;
-  margin-bottom: 3rem;
-}
-
-.hero-subtitle p {
-  margin-bottom: 0.3rem;
+  margin: 0;
 }
 
 .hero-actions {
   display: flex;
-  justify-content: center;
-  gap: 1rem;
+  gap: var(--spacing-md);
 }
 
 .hero-btn {
-  padding: 16px 32px;
-  font-size: 1.1rem;
+  padding: 0.875rem 1.75rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  border-radius: 12px;
-  position: relative;
-  overflow: hidden;
+  justify-content: center;
 }
 
-.btn-arrow {
-  transition: transform 0.3s ease;
+.btn-primary {
+  background: var(--gradient-primary);
+  color: white;
+  box-shadow: var(--shadow-primary);
 }
 
-.hero-btn:hover .btn-arrow {
-  transform: translateX(4px);
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
 }
 
-/* 功能特色區域 */
-.features-section {
-  padding: 6rem 2rem;
+.btn-secondary {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+  background: var(--accent-bg);
+  border-color: var(--primary-color);
+}
+
+.hero-stats {
+  display: flex;
+  gap: 2rem;
+  margin-top: var(--spacing-md);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.stat-number {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-label {
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+/* 視覺網格 */
+.hero-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.visual-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  max-width: 300px;
+}
+
+.grid-item {
   background: var(--secondary-bg);
-  position: relative;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  text-align: center;
+  transition: all 0.3s ease;
+  cursor: pointer;
 }
 
-.features-container {
+.grid-item:hover {
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-4px);
+}
+
+.item-icon {
+  font-size: 2rem;
+  margin-bottom: var(--spacing-sm);
+}
+
+.grid-item span {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+/* 工作流程區域 */
+.workflows-section {
+  background: var(--secondary-bg);
+  padding: 6rem 0;
+}
+
+.workflows-container {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 0 var(--spacing-lg);
 }
 
 .section-header {
@@ -338,226 +457,174 @@ const learnMore = () => {
 }
 
 .section-title {
-  font-size: 2.5rem;
+  font-size: 2.25rem;
   font-weight: 700;
   color: var(--text-primary);
-  margin-bottom: 1rem;
+  margin: 0 0 var(--spacing-md) 0;
 }
 
 .section-subtitle {
-  font-size: 1.2rem;
+  font-size: 1.125rem;
   color: var(--text-secondary);
+  margin: 0;
 }
 
-.features-grid {
+.workflows-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+  gap: var(--spacing-xl);
+  margin-bottom: 3rem;
+}
+
+.section-actions {
+  text-align: center;
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--primary-color);
+  border: 1px solid var(--primary-color);
+  padding: 0.875rem 2rem;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-outline:hover {
+  background: var(--primary-color);
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* 分類區域 */
+.categories-section {
+  background: var(--primary-bg);
+  padding: 6rem 0;
+}
+
+.categories-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.categories-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
+  gap: var(--spacing-xl);
 }
 
-.feature-card {
-  background: var(--gradient-card);
-  padding: 2.5rem 2rem;
-  border-radius: 16px;
-  text-align: center;
-  transition: all 0.3s ease;
+.category-card {
+  background: var(--secondary-bg);
   border: 1px solid var(--border-color);
-  position: relative;
-  overflow: hidden;
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+  transition: all 0.2s ease;
+  cursor: pointer;
 }
 
-.feature-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: var(--gradient-primary);
-  transform: translateX(-100%);
-  transition: transform 0.3s ease;
-}
-
-.feature-card:hover::before {
-  transform: translateX(0);
-}
-
-.feature-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-card);
+.category-card:hover {
   border-color: var(--primary-color);
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-2px);
 }
 
-.feature-icon-wrapper {
-  position: relative;
-  width: 80px;
-  height: 80px;
-  margin: 0 auto 1.5rem;
+.category-icon {
+  width: 64px;
+  height: 64px;
+  background: var(--accent-bg);
+  border-radius: var(--radius-lg);
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-  border-radius: 20px;
-  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
-  transition: all 0.3s ease;
-}
-
-.feature-icon-wrapper:hover {
-  transform: translateY(-4px) scale(1.05);
-  box-shadow: 0 12px 35px rgba(0, 212, 255, 0.4);
-}
-
-.feature-icon-bg {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 20px;
-  backdrop-filter: blur(10px);
-}
-
-.feature-icon-text {
-  font-size: 1rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  position: relative;
-  z-index: 1;
-  letter-spacing: 1px;
-}
-
-.feature-title {
-  font-size: 1.4rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 1rem;
-}
-
-.feature-description {
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 1.5rem;
-}
-
-.feature-metrics {
-  display: flex;
-  justify-content: center;
-}
-
-.metric {
-  background: rgba(0, 212, 255, 0.1);
+  margin: 0 auto var(--spacing-lg) auto;
   color: var(--primary-color);
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.9rem;
+  border: 1px solid var(--border-color);
+}
+
+.category-icon svg {
+  width: 32px;
+  height: 32px;
+}
+
+.category-title {
+  font-size: 1.25rem;
   font-weight: 600;
-  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: var(--text-primary);
+  margin: 0 0 var(--spacing-sm) 0;
 }
 
-/* 統計數據區域 */
-.stats-section {
-  padding: 4rem 2rem;
-  background: var(--primary-bg);
-}
-
-.stats-container {
-  max-width: 800px;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 2rem;
-}
-
-.stat-item {
-  text-align: center;
-  padding: 2rem 1rem;
-}
-
-.stat-number {
-  font-size: 2.5rem;
-  font-weight: 700;
-  background: var(--gradient-primary);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 0.5rem;
-}
-
-.stat-label {
+.category-description {
   color: var(--text-secondary);
-  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: 0.9rem;
+}
+
+.category-count {
+  color: var(--text-muted);
+  font-size: 0.875rem;
   font-weight: 500;
 }
 
-/* 動畫 */
-@keyframes rotate {
-  from { transform: translate(-50%, -50%) rotate(0deg); }
-  to { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 0.3; transform: translate(-50%, -50%) scale(1); }
-  50% { opacity: 0.6; transform: translate(-50%, -50%) scale(1.05); }
-}
-
-@keyframes float {
-  0%, 100% { transform: translateY(0px) scale(1); opacity: 0.6; }
-  50% { transform: translateY(-20px) scale(1.1); opacity: 1; }
-}
-
 /* 響應式設計 */
-@media (max-width: 768px) {
-  .title-chinese {
+@media (max-width: 968px) {
+  .hero-container {
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 3rem;
+  }
+  
+  .hero-title {
     font-size: 2.5rem;
   }
   
-  .title-english {
-    font-size: 1.8rem;
-  }
-  
-  .title-brand {
-    font-size: 2rem;
-  }
-  
-  .hero-subtitle {
-    font-size: 1rem;
-  }
-  
-  .tech-circle {
-    width: 400px;
-    height: 400px;
-  }
-  
-  .features-grid {
+  .workflows-grid {
     grid-template-columns: 1fr;
   }
   
-  .stats-container {
-    grid-template-columns: repeat(2, 1fr);
+  .categories-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   }
 }
 
-@media (max-width: 480px) {
+@media (max-width: 640px) {
   .hero-section {
-    padding: 1rem;
+    padding: 3rem 0 4rem 0;
   }
   
-  .title-chinese {
+  .hero-container,
+  .workflows-container,
+  .categories-container {
+    padding: 0 var(--spacing-md);
+  }
+  
+  .hero-title {
     font-size: 2rem;
   }
   
-  .title-english {
-    font-size: 1.4rem;
+  .hero-actions {
+    flex-direction: column;
   }
   
-  .title-brand {
-    font-size: 1.6rem;
+  .hero-stats {
+    justify-content: center;
+    gap: var(--spacing-xl);
   }
   
-  .hero-btn {
-    padding: 12px 24px;
-    font-size: 1rem;
+  .visual-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
   }
-}
-</style> 
+  
+  .workflows-section,
+  .categories-section {
+    padding: 4rem 0;
+  }
+  
+  .section-title {
+    font-size: 1.875rem;
+  }
+}</style>

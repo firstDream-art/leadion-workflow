@@ -16,12 +16,6 @@
         <router-link to="/dashboard" class="nav-item">
           <span class="nav-text">儀表板</span>
         </router-link>
-        <router-link to="/analysis" class="nav-item">
-          <span class="nav-text">SEO分析</span>
-        </router-link>
-        <router-link to="/reports" class="nav-item">
-          <span class="nav-text">複盈報告</span>
-        </router-link>
         <router-link to="/history" class="nav-item">
           <span class="nav-text">整合分享</span>
         </router-link>
@@ -32,6 +26,21 @@
       
       <!-- 用戶選單和動作 -->
       <div class="navbar-actions">
+        <!-- 主題切換按鈕 -->
+        <button class="theme-toggle-btn" @click="themeStore.toggleTheme" :title="themeStore.isDark ? '切換到亮色模式' : '切換到暗色模式'">
+          <div class="theme-icon">
+            <!-- 暗色模式時顯示太陽圖標 -->
+            <svg v-if="themeStore.isDark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+              <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 6.34L4.93 4.93M19.07 19.07l-1.41-1.41" stroke="currentColor" stroke-width="2"/>
+            </svg>
+            <!-- 亮色模式時顯示月亮圖標 -->
+            <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="currentColor"/>
+            </svg>
+          </div>
+        </button>
+        
         <button class="action-btn consultation-btn" @click="showConsultation">
           立即預約
         </button>
@@ -56,12 +65,6 @@
         <router-link to="/dashboard" class="mobile-nav-item" @click="closeMobileMenu">
           儀表板
         </router-link>
-        <router-link to="/analysis" class="mobile-nav-item" @click="closeMobileMenu">
-          SEO分析
-        </router-link>
-        <router-link to="/reports" class="mobile-nav-item" @click="closeMobileMenu">
-          複盈報告
-        </router-link>
         <router-link to="/history" class="mobile-nav-item" @click="closeMobileMenu">
           整合分享
         </router-link>
@@ -69,6 +72,22 @@
           顧問諮詢
         </a>
         <div class="mobile-actions">
+          <!-- 手機版主題切換 -->
+          <button class="mobile-theme-toggle" @click="themeStore.toggleTheme">
+            <div class="mobile-theme-icon">
+              <!-- 暗色模式時顯示太陽圖標 -->
+              <svg v-if="themeStore.isDark" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"/>
+                <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 6.34L4.93 4.93M19.07 19.07l-1.41-1.41" stroke="currentColor" stroke-width="2"/>
+              </svg>
+              <!-- 亮色模式時顯示月亮圖標 -->
+              <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="currentColor"/>
+              </svg>
+            </div>
+            <span>{{ themeStore.isDark ? '切換到亮色模式' : '切換到暗色模式' }}</span>
+          </button>
+          
           <button class="mobile-consultation-btn" @click="showConsultation">
             立即預約
           </button>
@@ -84,8 +103,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useAuth } from '@clerk/vue'
+import { useThemeStore } from '@/stores/theme'
 
 const { signOut } = useAuth()
+const themeStore = useThemeStore()
 const isMobileMenuOpen = ref(false)
 
 const handleSignOut = () => {
@@ -109,11 +130,11 @@ const closeMobileMenu = () => {
 .app-navbar {
   background: var(--secondary-bg);
   border-bottom: 1px solid var(--border-color);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--shadow-card);
   position: sticky;
   top: 0;
   z-index: 1000;
-  backdrop-filter: blur(20px);
+  backdrop-filter: blur(10px);
 }
 
 .navbar-container {
@@ -143,11 +164,11 @@ const closeMobileMenu = () => {
   width: 40px;
   height: 40px;
   background: var(--gradient-primary);
-  border-radius: 12px;
+  border-radius: var(--radius-md);
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 15px rgba(0, 212, 255, 0.3);
+  box-shadow: var(--shadow-primary);
   position: relative;
   overflow: hidden;
 }
@@ -193,9 +214,9 @@ const closeMobileMenu = () => {
   color: var(--text-secondary);
   text-decoration: none;
   font-weight: 500;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   position: relative;
@@ -241,18 +262,18 @@ const closeMobileMenu = () => {
   background: var(--gradient-primary);
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--radius-md);
   font-weight: 600;
   font-size: 0.9rem;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   box-shadow: var(--shadow-primary);
 }
 
 .action-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 212, 255, 0.3);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
 }
 
 .consultation-btn {
@@ -285,6 +306,94 @@ const closeMobileMenu = () => {
   color: var(--error-color);
   border-color: var(--error-color);
   background: rgba(255, 82, 82, 0.1);
+}
+
+/* 主題切換按鈕 */
+.theme-toggle-btn {
+  background: var(--accent-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.theme-toggle-btn:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
+}
+
+
+.theme-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.theme-icon svg {
+  width: 100%;
+  height: 100%;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-btn:hover .theme-icon svg {
+  color: white;
+  transform: scale(1.1) rotate(15deg);
+}
+
+/* 手機版主題切換 */
+.mobile-theme-toggle {
+  background: var(--accent-bg);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 1rem;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.mobile-theme-toggle:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+.mobile-theme-icon {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-theme-icon svg {
+  width: 100%;
+  height: 100%;
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+.mobile-theme-toggle:hover .mobile-theme-icon svg {
+  color: var(--primary-color);
+  transform: scale(1.1);
 }
 
 

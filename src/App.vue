@@ -27,15 +27,23 @@ import { onMounted } from 'vue'
 import { useAuth } from '@clerk/vue'
 import AppNavbar from '@/components/AppNavbar.vue'
 import AppNotifications from '@/components/AppNotifications.vue'
+import { useThemeStore } from '@/stores/theme'
 
 // Clerk 認證狀態
 const { isSignedIn, isLoaded } = useAuth()
+
+// 主題狀態
+const themeStore = useThemeStore()
 
 // 應用程式載入時的初始化
 onMounted(() => {
   console.log('LeadIO App 已載入')
   console.log('Clerk 載入狀態:', isLoaded.value)
   console.log('用戶登入狀態:', isSignedIn.value)
+  
+  // 初始化主題系統
+  themeStore.initTheme()
+  themeStore.watchSystemTheme()
 })
 </script>
 
@@ -48,23 +56,38 @@ onMounted(() => {
 }
 
 :root {
-  /* 深色主題配色 - 參考 Leadion AI */
-  --primary-bg: #0f1419; /* 深藍黑色背景 */
-  --secondary-bg: #1a1f2e; /* 稍淺的深藍色 */
-  --accent-bg: #242b3d; /* 卡片背景 */
-  --primary-color: #00d4ff; /* 亮藍色強調 */
-  --secondary-color: #4fc3f7; /* 次要藍色 */
-  --success-color: #00e676; /* 成功綠色 */
-  --warning-color: #ffab40; /* 警告橙色 */
-  --error-color: #ff5252; /* 錯誤紅色 */
-  --text-primary: #ffffff; /* 主要文字 */
-  --text-secondary: #b3c5ef; /* 次要文字 */
-  --text-muted: #8892b0; /* 柔和文字 */
-  --border-color: #2d3748; /* 邊框顏色 */
-  --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #00d4ff 100%);
-  --gradient-card: linear-gradient(145deg, #1a1f2e 0%, #242b3d 100%);
-  --shadow-primary: 0 20px 40px rgba(0, 212, 255, 0.1);
-  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.3);
+  /* LiblibAI 風格配色 - 現代化設計系統 */
+  --primary-bg: #fafbfc; /* 極淺灰背景 */
+  --secondary-bg: #ffffff; /* 純白背景 */
+  --accent-bg: #f8f9fa; /* 輕微灰色背景 */
+  --primary-color: #228be6; /* 主藍色 */
+  --secondary-color: #339af0; /* 次要藍色 */
+  --success-color: #51cf66; /* 成功綠色 */
+  --warning-color: #ffd43b; /* 警告黃色 */
+  --error-color: #ff6b6b; /* 錯誤紅色 */
+  --text-primary: #212529; /* 主要文字 */
+  --text-secondary: #495057; /* 次要文字 */
+  --text-muted: #6c757d; /* 柔和文字 */
+  --border-color: #e9ecef; /* 邊框顏色 */
+  --gradient-primary: linear-gradient(135deg, #228be6 0%, #339af0 100%);
+  --gradient-card: linear-gradient(145deg, #ffffff 0%, #f8f9fa 100%);
+  --shadow-primary: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.1);
+  
+  /* Mantine 風格間距 */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 0.75rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  
+  /* 圓角設定 */
+  --radius-xs: 0.125rem;
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
 }
 
 #app {
@@ -150,16 +173,19 @@ body {
 }
 
 .btn-secondary {
-  background: transparent;
-  color: var(--primary-color);
-  border: 2px solid var(--primary-color);
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  border: 1px solid rgba(102, 126, 234, 0.5);
 }
 
 .btn-secondary:hover {
-  background: var(--primary-color);
-  color: var(--primary-bg);
   transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(102, 126, 234, 0.4);
+  border-color: rgba(102, 126, 234, 0.8);
 }
+
+
 
 /* 響應式設計 */
 @media (max-width: 768px) {

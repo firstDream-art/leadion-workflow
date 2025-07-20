@@ -13,6 +13,8 @@ declare module 'vue' {
     ElIcon: typeof import('element-plus/es')['ElIcon']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
+    SeoAnalyzerForm: typeof import('./src/components/SeoAnalyzerForm.vue')['default']
     StatCard: typeof import('./src/components/StatCard.vue')['default']
+    WorkflowCard: typeof import('./src/components/WorkflowCard.vue')['default']
   }
 }
