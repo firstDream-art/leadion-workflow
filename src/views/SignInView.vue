@@ -30,12 +30,24 @@
           :routing="'hash'"
           :fallback-redirect-url="'/dashboard'"
           :sign-up-url="'/sign-up'"
+          :sign-up-force-redirect-url="'/sign-up'"
+          :initial-values="{
+            emailAddress: '',
+            password: ''
+          }"
         />
+        
+        <!-- 流程提示 -->
+        <div class="auth-flow-notice">
+          <p class="notice-text">
+            <strong>💡 提示：首次使用社交帳號登入（Google、Facebook、LINE）？系統將自動引導您完成註冊流程。</strong>
+          </p>
+        </div>
         
         <!-- API 限制提示 -->
         <div class="rate-limit-notice">
           <p class="notice-text">
-            <strong>提示：</strong>如果遇到登入問題，請稍等片刻後重試。
+            <strong>⚠️ 注意：如果遇到登入問題，請稍等片刻後重試。</strong>
           </p>
         </div>
       </div>
@@ -75,25 +87,100 @@
       @retry="handleRetry"
       @auto-retry="handleAutoRetry"
     />
+    
+    <!-- 美觀的通知組件 -->
+    <AuthNotification
+      :show="notification.show"
+      :type="notification.type"
+      :title="notification.title"
+      :message="notification.message"
+      confirm-text="前往註冊"
+      cancel-text="稍後再說"
+      :show-cancel="true"
+      @confirm="handleNotificationConfirm"
+      @cancel="handleNotificationCancel"
+      @close="handleNotificationCancel"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { SignIn } from '@clerk/vue'
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import RateLimitNotice from '@/components/RateLimitNotice.vue'
+import AuthNotification from '@/components/AuthNotification.vue'
 import { clerkRateLimit, handleClerkError } from '@/utils/clerkRateLimit'
+
+// 路由和狀態管理
+const router = useRouter()
+
+// 錯誤訊息翻譯
+const translateClerkError = (errorMessage: string): string => {
+  const translations: Record<string, string> = {
+    'The External Account was not found': '找不到此社交帳號，請先註冊或使用其他方式登入',
+    'External Account was not found': '找不到此社交帳號，請先註冊或使用其他方式登入',
+    'form_identifier_not_found': '帳號不存在，請先註冊',
+    'account_not_found': '帳號不存在，請先註冊',
+    'User not found': '用戶不存在，請先註冊',
+    'Invalid credentials': '登入憑證無效，請檢查帳號密碼',
+    'Sign in failed': '登入失敗，請重試',
+    'Authentication failed': '認證失敗，請重試'
+  }
+  
+  // 完全匹配優先
+  if (translations[errorMessage]) {
+    return translations[errorMessage]
+  }
+  
+  // 部分匹配
+  const lowerMessage = errorMessage.toLowerCase()
+  for (const [key, value] of Object.entries(translations)) {
+    if (lowerMessage.includes(key.toLowerCase())) {
+      return value
+    }
+  }
+  
+  return errorMessage // 如果沒有翻譯，返回原始訊息
+}
 
 // 速率限制狀態
 const showRateLimit = ref(false)
 const rateLimitMessage = ref('')
 const retryDelay = ref(0)
 
-// 監聽全域錯誤事件
+// 流程狀態
+const authFlow = ref({
+  showSignUpHint: false,
+  lastError: null as string | null,
+  hasShownSignUpNotification: false // 🆕 標記是否已顯示過註冊提醒
+})
+
+// 通知狀態
+const notification = ref({
+  show: false,
+  type: 'info' as 'info' | 'warning' | 'error' | 'success',
+  title: '',
+  message: ''
+})
+
+// 監聽全域錯誤事件和 Clerk 錯誤
 window.addEventListener('error', (event) => {
   const error = event.error
   if (error?.message?.includes('429') || error?.message?.includes('Too Many Requests')) {
     handleRateLimitError(error)
+  } else if (error?.message?.includes('sign_up_url') || error?.message?.includes('account_not_found')) {
+    handleSignUpRequired(error)
+  }
+})
+
+// 監聽 Clerk 特定錯誤
+window.addEventListener('message', (event) => {
+  if (event.data?.type === 'clerk:error') {
+    const error = event.data.error
+    if (error?.code === 'form_identifier_not_found' || error?.code === 'account_not_found') {
+      handleSignUpRequired(error)
+    }
   }
 })
 
@@ -101,6 +188,34 @@ function handleRateLimitError(error: any) {
   showRateLimit.value = true
   rateLimitMessage.value = handleClerkError(error)
   retryDelay.value = clerkRateLimit.getSuggestedWaitTime()
+}
+
+function handleSignUpRequired(error: any) {
+  console.log('🔄 偵測到需要註冊，準備跳轉到註冊頁面...', error)
+  
+  // 🔒 如果已經顯示過通知，就不再重複顯示
+  if (authFlow.value.hasShownSignUpNotification) {
+    console.log('⚠️ 已顯示過註冊提醒，跳過重複通知')
+    return
+  }
+  
+  authFlow.value.showSignUpHint = true
+  const originalError = error?.message || '需要先註冊帳戶'
+  const translatedError = translateClerkError(originalError)
+  authFlow.value.lastError = translatedError
+  
+  // 標記已顯示過通知
+  authFlow.value.hasShownSignUpNotification = true
+  
+  // 顯示美觀的通知
+  setTimeout(() => {
+    notification.value = {
+      show: true,
+      type: 'info',
+      title: '需要創建帳戶',
+      message: `${translatedError}\n\n是否要前往註冊頁面創建新帳戶？註冊完成後，您就可以使用社交帳號（Google、Facebook、LINE）登入了。`
+    }
+  }, 500)
 }
 
 function handleRetry() {
@@ -115,6 +230,16 @@ function handleAutoRetry() {
   setTimeout(() => {
     window.location.reload()
   }, 1000)
+}
+
+// 通知處理函數
+function handleNotificationConfirm() {
+  notification.value.show = false
+  router.push('/sign-up')
+}
+
+function handleNotificationCancel() {
+  notification.value.show = false
 }
 
 // 🔧 優化後的樣式應用 - 使用 CSS 注入減少 DOM 查詢
@@ -144,7 +269,57 @@ function injectOptimizedSignInCSS() {
   }
 
   const css = `
-    /* 🎨 Clerk 登入頁面優化樣式 */
+    /* �� Clerk 登入頁面優化樣式 */
+    
+    /* 🔥 隱藏造成排版問題的箭頭圖標 - 增強版 */
+    .cl-buttonArrowIcon,
+    svg.cl-buttonArrowIcon,
+    .cl-formButtonPrimary .cl-buttonArrowIcon,
+    .cl-formButtonPrimary svg,
+    [class*="cl-buttonArrow"],
+    [class*="cl-internal"] svg[class*="Arrow"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    
+    /* 🚨 隱藏混淆的錯誤三角形和警告圖標 */
+    .cl-formFieldErrorIcon,
+    .cl-formFieldWarningIcon,
+    .cl-alertIcon,
+    .cl-alert .cl-alertIcon,
+    [class*="cl-alert"] svg,
+    [class*="cl-formFieldError"] svg,
+    [class*="cl-formFieldWarning"] svg,
+    .cl-formField svg[class*="Warning"],
+    .cl-formField svg[class*="Error"],
+    .cl-formField svg[class*="Alert"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    
+    /* 📝 改善錯誤訊息顯示 */
+    .cl-formFieldErrorText,
+    .cl-formFieldWarningText,
+    .cl-alertText,
+    .cl-alert .cl-alertText,
+    [class*="cl-formFieldError"] {
+      color: #f56565 !important;
+      font-size: 14px !important;
+      margin-top: 0.5rem !important;
+      padding: 0.5rem 0.75rem !important;
+      background: rgba(245, 101, 101, 0.1) !important;
+      border: 1px solid rgba(245, 101, 101, 0.2) !important;
+      border-radius: 6px !important;
+      display: block !important;
+    }
+    
+    
     .cl-socialButtonsBlockButton,
     .cl-socialButtons button {
       width: 44px !important;
@@ -170,6 +345,28 @@ function injectOptimizedSignInCSS() {
       object-fit: contain !important;
       margin: 0 !important;
       padding: 0 !important;
+    }
+    
+    /* 🔥 修復按鈕文字對齊問題 */
+    .cl-formButtonPrimary {
+      width: 100% !important;
+      max-width: 350px !important;
+      height: 44px !important;
+      margin: 1rem auto !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      text-align: center !important;
+      box-sizing: border-box !important;
+      padding: 0 16px !important;
+    }
+    
+    .cl-formButtonPrimary * {
+      text-align: center !important;
+      justify-content: center !important;
+      align-items: center !important;
+      width: 100% !important;
+      display: flex !important;
     }
     
     .cl-formField {
@@ -275,7 +472,38 @@ function handleSignInElementsFound() {
   isSignInProcessing = true
   
   try {
-    // 簡化處理邏輯 - 不再創建自定義按鈕，讓 CSS 樣式自動應用
+    // 檢查是否有錯誤訊息
+    const errorElements = document.querySelectorAll([
+      '.cl-formFieldErrorText',
+      '.cl-alertText',
+      '[class*="cl-formFieldError"]',
+      '[class*="cl-alert"]'
+    ].join(', '))
+    
+    if (errorElements.length > 0) {
+      errorElements.forEach(element => {
+        const errorText = element.textContent || ''
+        console.log('🚨 發現錯誤訊息:', errorText)
+        
+        // 🌏 直接翻譯頁面上的英文錯誤訊息
+        const translatedText = translateClerkError(errorText)
+        if (translatedText !== errorText) {
+          element.textContent = translatedText
+          console.log('📝 已翻譯錯誤訊息:', `"${errorText}" → "${translatedText}"`)
+        }
+        
+        // 檢查是否為需要註冊的錯誤 (包含原始英文訊息)
+        const lowerErrorText = errorText.toLowerCase()
+        if (lowerErrorText.includes('external account was not found') ||
+            lowerErrorText.includes('identifier') || 
+            lowerErrorText.includes('account') || 
+            lowerErrorText.includes('not found') ||
+            lowerErrorText.includes('sign up')) {
+          handleSignUpRequired({ message: errorText })
+        }
+      })
+    }
+    
     console.log('🎯 登入頁面 Clerk 元素檢測完成，使用原生按鈕')
   } catch (error) {
     console.error('處理登入頁面 Clerk 元素時出錯:', error)
@@ -638,32 +866,38 @@ function cleanupSignInOptimizations() {
   outline: none !important;
 }
 
-/* 主要按鈕樣式 - 減少強制性，避免干擾 Clerk 功能 */
+/* 主要按鈕樣式 - 簡化以避免與CSS注入衝突 */
 .auth-form :deep(.cl-formButtonPrimary) {
-  width: 100%;
-  max-width: 350px;
-  height: 44px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
   border: none !important;
   border-radius: 8px !important;
   color: white !important;
-  font-weight: 600;
-  font-size: 16px;
-  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
-  transition: all 0.3s ease;
-  box-sizing: border-box;
-  margin: 1rem auto;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2) !important;
+  transition: all 0.3s ease !important;
+  cursor: pointer !important;
+}
+
+/* 🔥 強制隱藏按鈕箭頭圖標 - 備用方案 */
+.auth-form :deep(.cl-buttonArrowIcon),
+.auth-form :deep(svg.cl-buttonArrowIcon),
+.auth-form :deep(.cl-formButtonPrimary .cl-buttonArrowIcon),
+.auth-form :deep(.cl-formButtonPrimary svg),
+.auth-form :deep([class*="cl-buttonArrow"]),
+.auth-form :deep([class*="cl-internal"] svg[class*="Arrow"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* 保持按鈕原始文字和功能 */
 
 .auth-form :deep(.cl-formButtonPrimary:hover) {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4) !important;
 }
 
 /* 社交登入按鈕 */
@@ -1096,6 +1330,28 @@ function cleanupSignInOptimizations() {
 
 
 
+/* 流程提示樣式 */
+.auth-flow-notice {
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(16, 185, 129, 0.1) 100%);
+  border: 1px solid rgba(34, 197, 94, 0.2);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 1rem 0;
+  text-align: center;
+}
+
+.auth-flow-notice .notice-text {
+  color: #1f2937;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.auth-flow-notice .notice-text strong {
+  color: #059669;
+  font-weight: 600;
+}
+
 /* API 限制提示樣式 */
 .rate-limit-notice {
   background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);
@@ -1104,6 +1360,18 @@ function cleanupSignInOptimizations() {
   padding: 1rem;
   margin: 1rem 0;
   text-align: center;
+}
+
+.rate-limit-notice .notice-text {
+  color: #92400e;
+  font-size: 0.9rem;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.rate-limit-notice .notice-text strong {
+  color: #d97706;
+  font-weight: 600;
 }
 
 </style>

@@ -94,7 +94,22 @@ function injectOptimizedCSS() {
   }
 
   const css = `
-    /* 🎨 Clerk 註冊頁面優化樣式 */
+    /* �� Clerk 註冊頁面優化樣式 */
+    
+    /* 🔥 隱藏造成排版問題的箭頭圖標 - 增強版 */
+    .cl-buttonArrowIcon,
+    svg.cl-buttonArrowIcon,
+    .cl-formButtonPrimary .cl-buttonArrowIcon,
+    .cl-formButtonPrimary svg,
+    [class*="cl-buttonArrow"],
+    [class*="cl-internal"] svg[class*="Arrow"] {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+    
     .cl-socialButtonsBlockButton,
     .cl-socialButtons button {
       width: 44px !important;
@@ -665,9 +680,10 @@ function cleanupOptimizations() {
   border-radius: 8px !important;
   color: transparent !important;
   font-weight: 600 !important;
-  font-size: 0 !important; /* 隱藏原始文字 */
+  font-size: 16px !important;
   box-shadow: 0 4px 15px rgba(0, 212, 255, 0.2) !important;
   transition: all 0.3s ease !important;
+  box-sizing: border-box !important;
   margin: 0 auto 2rem auto !important; /* 確保按鈕居中並添加底部間距 */
   display: flex !important; /* 改用 flex 布局確保文字居中 */
   align-items: center !important;
@@ -678,9 +694,22 @@ function cleanupOptimizations() {
   overflow: visible !important; /* 確保文字不被截斷 */
   /* 確保按鈕文字正確顯示 */
   font-family: inherit !important;
-  line-height: 0 !important;
+  line-height: 1.2 !important;
   letter-spacing: 0.5px !important;
-  box-sizing: border-box !important;
+}
+
+/* 🔥 強制隱藏按鈕箭頭圖標 - 備用方案 */
+.auth-form :deep(.cl-buttonArrowIcon),
+.auth-form :deep(svg.cl-buttonArrowIcon),
+.auth-form :deep(.cl-formButtonPrimary .cl-buttonArrowIcon),
+.auth-form :deep(.cl-formButtonPrimary svg),
+.auth-form :deep([class*="cl-buttonArrow"]),
+.auth-form :deep([class*="cl-internal"] svg[class*="Arrow"]) {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 /* 修改按鈕文字為"註冊" - 優化版本 */

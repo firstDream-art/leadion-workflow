@@ -9,6 +9,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppNavbar: typeof import('./src/components/AppNavbar.vue')['default']
     AppNotifications: typeof import('./src/components/AppNotifications.vue')['default']
+    AuthNotification: typeof import('./src/components/AuthNotification.vue')['default']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElResult: typeof import('element-plus/es')['ElResult']
     RateLimitNotice: typeof import('./src/components/RateLimitNotice.vue')['default']
