@@ -275,9 +275,43 @@ const viewCategory = (category: any) => {
 
 /* 英雄區域 */
 .hero-section {
-  background: var(--primary-bg);
+  background: 
+    radial-gradient(ellipse at top left, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at top right, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom left, rgba(34, 139, 230, 0.1) 0%, transparent 50%),
+    linear-gradient(135deg, var(--primary-bg) 0%, rgba(15, 20, 25, 0.95) 100%);
   padding: 4rem 0 6rem 0;
   position: relative;
+  overflow: hidden;
+}
+
+/* 添加動態背景元素 */
+.hero-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 20% 20%, rgba(0, 212, 255, 0.08) 0%, transparent 25%),
+    radial-gradient(circle at 80% 80%, rgba(102, 126, 234, 0.05) 0%, transparent 25%),
+    radial-gradient(circle at 40% 60%, rgba(34, 139, 230, 0.03) 0%, transparent 25%);
+  animation: backgroundFloat 15s ease-in-out infinite alternate;
+  z-index: 1;
+}
+
+.hero-section::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23667eea' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E") repeat;
+  opacity: 0.4;
+  animation: patternMove 30s linear infinite;
+  z-index: 0;
 }
 
 .hero-container {
@@ -288,6 +322,8 @@ const viewCategory = (category: any) => {
   grid-template-columns: 1fr 1fr;
   gap: 4rem;
   align-items: center;
+  position: relative;
+  z-index: 2;
 }
 
 .hero-content {
@@ -420,7 +456,13 @@ const viewCategory = (category: any) => {
   text-align: center;
   transition: all 0.3s ease;
   cursor: pointer;
+  animation: float 4s ease-in-out infinite;
 }
+
+.grid-item:nth-child(1) { animation-delay: 0s; }
+.grid-item:nth-child(2) { animation-delay: 1s; }
+.grid-item:nth-child(3) { animation-delay: 2s; }
+.grid-item:nth-child(4) { animation-delay: 3s; }
 
 .grid-item:hover {
   border-color: var(--primary-color);
@@ -626,5 +668,36 @@ const viewCategory = (category: any) => {
   
   .section-title {
     font-size: 1.875rem;
+  }
+}
+
+/* 動畫效果 */
+@keyframes backgroundFloat {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-10px, -5px) scale(1.02);
+  }
+  100% {
+    transform: translate(5px, -10px) scale(0.98);
+  }
+}
+
+@keyframes patternMove {
+  0% {
+    transform: translate(0, 0);
+  }
+  100% {
+    transform: translate(60px, 60px);
+  }
+}
+
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
   }
 }</style>
