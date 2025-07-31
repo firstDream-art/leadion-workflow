@@ -5,23 +5,29 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:test": "vite --mode test --host",
+    "dev:prod": "vite --mode production",
     "build": "vite build",
+    "build:test": "vite build --mode test",
     "preview": "vite preview",
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
-    "@clerk/localizations": "^3.20.1",
-    "@clerk/vue": "^1.0.5",
     "@element-plus/icons-vue": "^2.3.1",
     "@rive-app/canvas": "^2.30.3",
     "@vueuse/core": "^10.9.0",
+    "@vueuse/head": "^2.0.0",
     "axios": "^1.6.8",
+    "crypto-js": "^4.2.0",
     "element-plus": "^2.6.3",
+    "lodash-es": "^4.17.21",
+    "lucide-vue-next": "^0.525.0",
     "pinia": "^2.1.7",
     "vue": "^3.4.21",
     "vue-router": "^4.3.0"
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.2.2",
     "@types/node": "^20.12.7",
     "@vitejs/plugin-vue": "^5.0.4",
     "typescript": "^5.4.5",
