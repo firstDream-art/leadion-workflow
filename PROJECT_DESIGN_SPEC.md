@@ -304,12 +304,98 @@ test: 測試相關
 chore: 構建或輔助工具
 ```
 
-## 🧪 測試規範
+## 🧪 測試規範 (強制執行)
+
+### ⚠️ 絕對規則
+**每次新增代碼都必須寫單元測試 - 沒有例外！**
+
+1. **新增函數** → 必須有對應測試
+2. **新增組件** → 必須有組件測試
+3. **新增 API** → 必須有 API 測試
+4. **修改邏輯** → 必須更新相關測試
+5. **提交代碼** → 所有測試必須通過
+
+### 測試框架配置
+```json
+// 前端測試
+{
+  "framework": "Vitest",
+  "coverage": "v8",
+  "environment": "jsdom",
+  "setupFiles": ["./src/test/setup.ts"]
+}
+
+// 後端測試
+{
+  "framework": "Jest",
+  "testEnvironment": "node",
+  "coverageDirectory": "coverage"
+}
+```
 
 ### 測試覆蓋率目標
 - 單元測試: 80%
 - 整合測試: 核心流程
 - E2E 測試: 關鍵用戶路徑
+
+### 前端單元測試範例
+```typescript
+// src/stores/__tests__/auth.test.ts
+import { describe, it, expect, beforeEach } from 'vitest'
+import { setActivePinia, createPinia } from 'pinia'
+import { useAuthStore } from '../auth'
+
+describe('Auth Store', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('should login user successfully', async () => {
+    const store = useAuthStore()
+    await store.login('test@example.com', '123456')
+    
+    expect(store.isAuthenticated).toBe(true)
+    expect(store.user?.email).toBe('test@example.com')
+  })
+
+  it('should handle login failure', async () => {
+    const store = useAuthStore()
+    await expect(store.login('invalid@example.com', 'wrong'))
+      .rejects.toThrow('認證失敗')
+  })
+})
+```
+
+### 後端單元測試範例
+```javascript
+// backend/tests/services/creditService.test.js
+describe('CreditService', () => {
+  it('should deduct credits successfully', async () => {
+    const result = await CreditService.deductCredits('user@example.com', 10)
+    
+    expect(result.success).toBe(true)
+    expect(result.newBalance).toBeGreaterThanOrEqual(0)
+  })
+
+  it('should prevent negative balance', async () => {
+    await expect(CreditService.deductCredits('user@example.com', 999999))
+      .rejects.toThrow('餘額不足')
+  })
+})
+```
+
+### 測試執行指令
+```bash
+# 前端測試
+npm run test          # 執行測試
+npm run test:watch    # 監聽模式
+npm run test:coverage # 覆蓋率報告
+
+# 後端測試
+npm test              # 執行測試
+npm run test:watch    # 監聽模式
+npm run test:coverage # 覆蓋率報告
+```
 
 ### 測試檢查清單
 - [ ] 用戶註冊/登入流程
@@ -318,6 +404,10 @@ chore: 構建或輔助工具
 - [ ] 點數查詢與扣除
 - [ ] 管理員功能
 - [ ] N8N Webhook 接收
+- [ ] Token 刷新機制
+- [ ] 錯誤處理流程
+- [ ] 輸入驗證
+- [ ] API 權限控制
 
 ## 📊 監控與維護
 

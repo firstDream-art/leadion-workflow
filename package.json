@@ -15,7 +15,9 @@
     "test:ui": "vitest --ui",
     "test:watch": "vitest --watch",
     "test:coverage": "vitest --coverage",
-    "test:run": "vitest run"
+    "test:run": "vitest run",
+    "test:check": "node scripts/test-check.js",
+    "pre-commit": "npm run test:check"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
